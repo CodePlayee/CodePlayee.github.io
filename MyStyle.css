@@ -1,0 +1,182 @@
+html{
+    height:100%;
+    margin: 0;
+}
+*{
+    margin:0;
+    padding:0;
+}
+
+.full{
+    position:absolute;
+    width: 100%;
+    height:100%;
+}
+div#header{
+    height:60px;
+    background-color: #C7C5AE;
+    /*设置字体属性*/
+    font-family: 微软雅黑;
+    font-size: 1.5em;
+    color:#00E;
+    text-align: center;
+    letter-spacing:15px;
+    line-height: 60px;
+}
+
+/*地图容器*/
+#map_div {
+    left: 0%;
+    width:100%;
+    height:100%;
+    position: relative;
+    -moz-box-flex: 1;
+    -webkit-box-flex:1;
+    box-flex: 1;
+    background-color:#6B6B6B;
+}
+
+.upper_controls{
+    position: relative;
+    z-index: 2;
+}
+
+/*绘制地图的svg*/
+svg#map_svg{
+    position:absolute;
+    background-color: rgba(255,255,255,0);
+    /*overflow: auto;*/
+}
+
+/*显示当前缩放倍数以及多边形信息*/
+div#show_detail{
+    position: absolute;
+    left:-20%;
+    top: 60px;
+    background-color:#0076a3;
+    width:20%;
+    height:100%;
+    opacity: 0;
+}
+
+p.detail{
+    margin: 15px 5px 15px 10px;
+    font-size: 120%;
+    color: white;/*字体颜色*/
+}
+
+p#show_scale{
+    margin: 5px 10px 0px 20px;
+    font-size: 160%;
+    color: white;/*字体颜色*/
+}
+
+select{
+    border: solid 2px #000;
+    /*很关键：将默认的select选择框样式清除*/
+    appearance:none;
+    -moz-appearance:none;
+    -webkit-appearance:none;
+    /*在选择框的最右侧中间显示小箭头图片*/
+    color:black;
+    background: url("imag/arrow.png") no-repeat scroll right center transparent;
+    /*为下拉小箭头留出一点位置，避免被文字覆盖*/
+    padding-right: 14px;
+    width:auto;
+    height:25px;
+    margin: 10px 30px 10px 30px;
+}
+option{
+    text-align: center;
+    background-color: #0076a3;
+}
+
+/*清除ie的默认选择框样式清除，隐藏下拉箭头*/
+select::-ms-expand { display: none; }
+
+/*设置文字*/
+text {
+    font: 10px Microsoft YaHei;
+    pointer-events: none;
+    text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+/*背景矩形*/
+.background {
+    fill:none; /* rgba(50,50,50,0.6) */
+    pointer-events: all;
+}
+
+/*各个多边形内部边界,不包括整体的外部轮廓*/
+.polygon_borders {
+    fill: none;
+    stroke: #777;
+    /*stroke-width: 1px;*/    /*不要在CSS中设置线宽，否则会以此数值缩放。（在zoomed和interpolateZoom函数中 1.5 / d3.event.scale会控制线宽恒为1.5px） */
+    /*stroke-dasharray: 2,2; !*线型*!*/
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+/*正六边形单元的边界*/
+.hexagon_borders {
+    fill: none;
+    stroke: #0d0;
+    pointer-events: none;
+}
+
+/*外部轮廓边界*/
+/*使用默认宽度*/
+.outline {
+    fill: none;
+    stroke-width: 0.4px;
+    stroke:rgba(0,0,250,0.8);
+    stroke-dasharray:none; /*线型*/
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+/*设置宽度为1px*/
+.outlineWithWidth {
+    fill: none;
+    stroke:rgba(0,0,250,0.6);
+    stroke-width: 1px;
+    /*stroke-width: 0px;*/
+    stroke-dasharray:none; /*线型*/
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+/*最底图层按机构聚落后的图斑边界*/
+.clusterBorder {
+    fill: none;
+    stroke:rgba(0,0,250,0.8);
+    stroke-width: 0.1px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+/* 水平布局 */
+.box-horizon {
+    position: relative;
+    display: -moz-box;
+    display: -webkit-box;
+    -moz-box-orient: horizontal;
+    -webkit-box-orient: horizontal;
+}
+
+/* 垂直布局 */
+.box-vertical {
+    position: relative;
+    display: -moz-box;
+    display: -webkit-box;
+    -moz-box-orient: vertical;
+    -webkit-box-orient: vertical;
+}
+
+
+
+
+
+
