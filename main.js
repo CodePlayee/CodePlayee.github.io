@@ -105,11 +105,11 @@ function load() {
     svg.call(zoom) // delete this line to disable free zooming
         .call(zoom.event);
 
-    var urls = ["http://localhost:8188/data/first2016Z_topo.json",
-        "http://localhost:8188/data/second2016Z_topo.json",
-        "http://localhost:8188/data/third2016Z_topo.json",
-        "http://localhost:8188/data/fourth2016Z_topo.json",
-        "http://localhost:8188/data/fifth2016Z_topo.json"];
+    var urls = ["./data/first2016Z_topo.json",
+        "./data/second2016Z_topo.json",
+        "./data/third2016Z_topo.json",
+        "./data/fourth2016Z_topo.json",
+        "./data/fifth2016Z_topo.json"];
 
     //再使用基于多个d3.json读取的数据之前，使用queue.js加载完这些数据再做下一步处理
     queue()
