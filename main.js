@@ -1,6 +1,6 @@
-//last edited by GaoZhen at 2018/6/7
 //all copyright hold by GaoZhen.
 //free to use only for study and research purpose,please contact 1295020109@qq.com for permission on other usage.
+//the project was established with ES5.
 
 // TODO list
 // 1.地图初始出现在svg中心位置,需要依据地图坐标中心设置投影中心 project.center()  //done
@@ -8,7 +8,6 @@
 // 3.鼠标点击多边形，相应的区域边界颜色改变，标注也有相应变化//
 // 4.在多边形上实现自适应标注
 // 5.第五层点击放大聚焦有问题，推测是聚类时交换正六边形单元所致//done
-
 // 6.双击目标图斑，缩放显示其内部细节的同时，其他图斑也要有缩放//done
 // 7.最后图层补完整//done
 
@@ -16,8 +15,6 @@
 // 前3个基础图层，由于数据完整，轮廓一致，所以对应的投影projection近乎一致。即若数据完整，各图层的投影函数是相同的。
 // 后两个图层，由于数据缺失，轮廓改变，投影中心随之改变。
 // 以上体现在makeDetailLayer函数中的投影函数projection中
-
-
 
 //重新组织后的数据
 var whole = new Array();//总体（第一层）
@@ -27,6 +24,7 @@ var sub_disciplines = new Array();//子学科
 var programs = new Array();//（个人项目）
 var groups = [];//存放所有图层g1,g2,g3,g4,g5
 var dgs_data = [];//存储细节图层数据的字典
+var detail_g=null;//点击某个多边形放大后，展示其内部细节的容器
 
 var hierarchy = [whole, departments, subjects, sub_disciplines, programs];//包含一个inUse属性，指示当前鼠标点击的多边形
 var orgSvgCenter = [];//初始svg中心
@@ -100,7 +98,7 @@ function load() {
     g5.level = 5, g5.id = "g5";
     groups = [g1, g2, g3, g4, g5];
 
-    var detail_g = baseLayers.append("g").attr("id","detail")//点击某个多边形放大后，展示其内部细节的容器
+    detail_g = baseLayers.append("g").attr("id","detail")//点击某个多边形放大后，展示其内部细节的容器
 
     svg.call(zoom) // delete this line to disable free zooming
         .call(zoom.event);
@@ -111,7 +109,7 @@ function load() {
         "./data/fourth2016Z_topo.json",
         "./data/fifth2016Z_topo.json"];
 
-    //再使用基于多个d3.json读取的数据之前，使用queue.js加载完这些数据再做下一步处理
+    //在使用基于多个d3.json读取的数据之前，使用queue.js加载完这些数据再做下一步处理
     queue()
         .defer(d3.json, urls[0])
         .defer(d3.json, urls[1])
@@ -121,7 +119,8 @@ function load() {
         .await(createMap);
 
     for (var i = 1; i < groups.length; i++) {
-        groups[i].style("display", "none");
+       // groups[i].style("display", "none");
+          groups[i].style("visibility", "false");
     }
 
     //窗口尺寸改变完成事件
@@ -212,7 +211,7 @@ function load() {
                     return currentClass;
                 })
                 .each(function (d) {
-                    reorganize(d, group.projection);//对原数据进行重组织。center
+                    reorganize(d, group.projection);//对原数据进行重组织。
                 })
                 .on("mouseover", function () {
                     d3.select(this).style("stroke", "#fff");
@@ -284,7 +283,7 @@ function load() {
         {
             d3.select("#show_detail")   //弹出左侧悬浮区域
                 .transition()
-                .duration(1000)
+                .duration(750)
                 .style("left", 0 + "px")
                 .style("opacity", 0.8);
 
@@ -398,7 +397,8 @@ function load() {
         var scale = scale.toFixed(1);
         var baseHide = function () {
             for (var i = 0; i < groups.length; i++) {
-                groups[i].style("display", "none");
+               // groups[i].style("display", "none");
+                groups[i].style("visibility","hidden");
             }
         }
         var current_group = whichGroup(groups);
@@ -407,7 +407,8 @@ function load() {
         if (scale - 1.2 <= 0.1 && scale - 1.2 >= -0.1)  //中间点1.2    范围 1.1-1.3
         {
             baseHide();
-            g1.style("display", "");
+          //  g1.style("display", "");
+            g1.style("visibility","visible");
             g1.mScale = 1.2; //记录图层g1显示的中间尺度
             g1.maxScale = 1.3; //记录图层g1显示的最大尺度
             g1.minScale = 1.1;
@@ -417,7 +418,8 @@ function load() {
         if (scale - 1.5 <= 0.4 && scale - 1.5 >= -0.2)   //范围 1.3-1.9
         {
             baseHide();
-            g2.style("display", "");
+          //  g2.style("display", "");
+            g2.style("visibility","visible");
             g2.mScale = 1.5;
             g2.maxScale = 1.9;
             g2.minScale = 1.3;
@@ -426,7 +428,8 @@ function load() {
         if (scale - 2.0 <= 0.7 && scale - 2.0 >= -0.1)   // 1.9-2.7
         {
             baseHide();
-            g3.style("display", "");
+            //g3.style("display", "");
+            g3.style("visibility","visible");
             g3.mScale = 2;
             g3.maxScale = 2.7;
             g3.minScale = 1.9;
@@ -436,7 +439,8 @@ function load() {
         if (scale - 3.0 <= 2.2 && scale - 3.0 >= -0.3)      // 2.7-5.2
         {
             baseHide();
-            g4.style("display", "");
+            //g4.style("display", "");
+            g4.style("visibility","visible");
             g4.mScale = 3;
             g4.maxScale = 5.2;
             g4.minScale = 2.7;
@@ -444,7 +448,8 @@ function load() {
         }
         if (scale > 5.2) {
             baseHide();
-            g5.style("display", "");
+            //g5.style("display", "");
+            g5.style("visibility","visible");
             g5.mScale = 5.4;
             g5.maxScale = 20;
             g5.minScale = 5.3;
