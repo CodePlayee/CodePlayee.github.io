@@ -24,7 +24,6 @@ var sub_disciplines = new Array();//子学科
 var programs = new Array();//（个人项目）
 var groups = [];//存放所有图层g1,g2,g3,g4,g5
 var dgs_data = [];//存储细节图层数据的字典
-var detail_g=null;//点击某个多边形放大后，展示其内部细节的容器
 
 var hierarchy = [whole, departments, subjects, sub_disciplines, programs];//包含一个inUse属性，指示当前鼠标点击的多边形
 var orgSvgCenter = [];//初始svg中心
@@ -98,7 +97,7 @@ function load() {
     g5.level = 5, g5.id = "g5";
     groups = [g1, g2, g3, g4, g5];
 
-    detail_g = baseLayers.append("g").attr("id","detail")//点击某个多边形放大后，展示其内部细节的容器
+    var detail_g = baseLayers.append("g").attr("id","detail")//点击某个多边形放大后，展示其内部细节的容器
 
     svg.call(zoom) // delete this line to disable free zooming
         .call(zoom.event);
@@ -120,7 +119,7 @@ function load() {
 
     for (var i = 1; i < groups.length; i++) {
        // groups[i].style("display", "none");
-          groups[i].style("visibility", "false");
+          groups[i].style("visibility", "hidden");
     }
 
     //窗口尺寸改变完成事件
@@ -457,12 +456,12 @@ function load() {
         }
 
         if (showDetailLayer === true) {  // && scale > current_group.minScale
-            detail_g.selectAll("g").style("display", "none");
-            var dg = detail_g.select("#dg" + current_level).style("display", "");
+            detail_g.selectAll("g").style("visibility", "hidden");
+            var dg = detail_g.select("#dg" + current_level).style("visibility", "visible");
             if (current_level < groups.length) {
                 if (dg[0][0] && dg[0][0].childElementCount === 0) {
                     var upperLevel = current_level - 1;
-                    detail_g.select("#dg" + upperLevel).style("display", "");
+                    detail_g.select("#dg" + upperLevel).style("visibility", "visible");
                 }
             }
 
@@ -689,7 +688,9 @@ function buildNeighbor(focus) {
 function makeDetailLayer(dGroups, selectedProperty, hierarchy) {
     for (var i = 0, l = hierarchy.length - 1; i < l; i++) {  //the last base layer does not own detailLayer
         var g = dGroups[i];
-        g.style("display", "none");
+        //g.style("display", "none");
+        g.style("visibility", "hidden");
+        
         for (var j = 0, l2 = hierarchy[i].length; j < l2; j++) {
             var ele = hierarchy[i][j];
             var coordinates = ele.innerPolygons;  // ? hit_polygon.innerPolygons : hit_polygon.geometry;
@@ -715,7 +716,8 @@ function makeDetailLayer(dGroups, selectedProperty, hierarchy) {
 
                 if (i === hierarchy.length - 2) {
                     var path2 = d3.geo.path().projection(groups[3].projection);
-                    dGroups[4].style("display", "none");
+                   // dGroups[4].style("display", "none");
+                     dGroups[4].style("visibility", "hidden");
                     appendPath2g(dGroups[4], [data[k]], path2);
                 }
             }
