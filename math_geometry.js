@@ -181,7 +181,10 @@ function addSub_Inner(data, upper_layer, newItem) {
 
 function whichGroup(groups) {
     for (var i = 0; i < groups.length; i++) {
-        if (groups[i].style("display") === "inline") {
+    //    if (groups[i].style("display") === "inline") {
+    //        return groups[i];
+    //    }
+        if (groups[i].style("visibility") === "visible") {
             return groups[i];
         }
     }
