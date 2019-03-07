@@ -118,8 +118,8 @@ function load() {
         .await(createMap);
 
     for (var i = 1; i < groups.length; i++) {
-       // groups[i].style("display", "none");
-          groups[i].style("visibility", "hidden");
+        groups[i].style("display", "none");
+        //groups[i].style("visibility", "hidden");
     }
 
     //窗口尺寸改变完成事件
@@ -396,8 +396,8 @@ function load() {
         var scale = scale.toFixed(1);
         var baseHide = function () {
             for (var i = 0; i < groups.length; i++) {
-               // groups[i].style("display", "none");
-                groups[i].style("visibility","hidden");
+               groups[i].style("display", "none");
+               // groups[i].selectAll("path").style("visibility","hidden");
             }
         }
         var current_group = whichGroup(groups);
@@ -406,8 +406,8 @@ function load() {
         if (scale - 1.2 <= 0.1 && scale - 1.2 >= -0.1)  //中间点1.2    范围 1.1-1.3
         {
             baseHide();
-          //  g1.style("display", "");
-            g1.style("visibility","visible");
+            g1.style("display", "");
+            //g1.selectAll("path").style("visibility","visible");
             g1.mScale = 1.2; //记录图层g1显示的中间尺度
             g1.maxScale = 1.3; //记录图层g1显示的最大尺度
             g1.minScale = 1.1;
@@ -417,8 +417,8 @@ function load() {
         if (scale - 1.5 <= 0.4 && scale - 1.5 >= -0.2)   //范围 1.3-1.9
         {
             baseHide();
-          //  g2.style("display", "");
-            g2.style("visibility","visible");
+            g2.style("display", "");
+           // g2.selectAll("path").style("visibility","visible");
             g2.mScale = 1.5;
             g2.maxScale = 1.9;
             g2.minScale = 1.3;
@@ -427,8 +427,8 @@ function load() {
         if (scale - 2.0 <= 0.7 && scale - 2.0 >= -0.1)   // 1.9-2.7
         {
             baseHide();
-            //g3.style("display", "");
-            g3.style("visibility","visible");
+            g3.style("display", "");
+            //g3.selectAll("path").style("visibility","visible");
             g3.mScale = 2;
             g3.maxScale = 2.7;
             g3.minScale = 1.9;
@@ -438,8 +438,8 @@ function load() {
         if (scale - 3.0 <= 2.2 && scale - 3.0 >= -0.3)      // 2.7-5.2
         {
             baseHide();
-            //g4.style("display", "");
-            g4.style("visibility","visible");
+            g4.style("display", "");
+           // g4.selectAll("path").style("visibility","visible");
             g4.mScale = 3;
             g4.maxScale = 5.2;
             g4.minScale = 2.7;
@@ -447,8 +447,8 @@ function load() {
         }
         if (scale > 5.2) {
             baseHide();
-            //g5.style("display", "");
-            g5.style("visibility","visible");
+            g5.style("display", "");
+          //  g5.selectAll("path").style("visibility","visible");
             g5.mScale = 5.4;
             g5.maxScale = 20;
             g5.minScale = 5.3;
@@ -690,7 +690,7 @@ function makeDetailLayer(dGroups, selectedProperty, hierarchy) {
         var g = dGroups[i];
         //g.style("display", "none");
         g.style("visibility", "hidden");
-        
+
         for (var j = 0, l2 = hierarchy[i].length; j < l2; j++) {
             var ele = hierarchy[i][j];
             var coordinates = ele.innerPolygons;  // ? hit_polygon.innerPolygons : hit_polygon.geometry;
