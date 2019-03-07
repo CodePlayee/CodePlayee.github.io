@@ -333,9 +333,9 @@ function displayDetail(selectedProperty, g, hit_polygon) {
 
 //点击放大时，获得当前点击的多边形数据（重组织后的）
 function getHitPolygon(current_this) {
-    var depth = current_this.__data__.properties.depth;
+    var depth = current_this.__data__.properties ? current_this.__data__.properties.depth: current_this.__data__.info.properties.depth;
     var current_hierarchy;
-    var name = current_this.__data__.properties.name;
+    var name = current_this.__data__.properties ? current_this.__data__.properties.name:current_this.__data__.info.properties.name;
     switch (depth) {
         case "1":
             current_hierarchy = hierarchy[0];
