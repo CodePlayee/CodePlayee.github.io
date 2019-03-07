@@ -2,7 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="38e99b4d-6aa6-4b6a-abea-94e5acc56ae4" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/math_geometry.js" beforeDir="false" afterPath="$PROJECT_DIR$/math_geometry.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MyStyle.css" beforeDir="false" afterPath="$PROJECT_DIR$/MyStyle.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/main.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -15,24 +18,23 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="228">
-              <caret line="30" lean-forward="true" selection-start-line="30" selection-end-line="30" />
+            <state relative-caret-position="98">
+              <caret line="14" column="8" lean-forward="true" selection-start-line="14" selection-start-column="8" selection-end-line="14" selection-end-column="8" />
+              <folding>
+                <element signature="n#style#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/math_geometry.js">
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/MyStyle.css">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="257">
-              <caret line="342" column="17" lean-forward="true" selection-start-line="342" selection-start-column="17" selection-end-line="342" selection-end-column="17" />
-              <folding>
-                <element signature="e#11592#18399#0" />
-                <element signature="e#20173#21299#0" />
-              </folding>
+            <state relative-caret-position="227">
+              <caret line="90" column="16" lean-forward="true" selection-start-line="90" selection-start-column="16" selection-end-line="90" selection-end-column="16" />
             </state>
           </provider>
         </entry>
@@ -40,16 +42,13 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="858">
-              <caret line="382" column="47" selection-start-line="382" selection-start-column="47" selection-end-line="382" selection-end-column="47" />
+            <state relative-caret-position="106">
+              <caret line="820" column="39" lean-forward="true" selection-start-line="820" selection-start-column="24" selection-end-line="820" selection-end-column="39" />
               <folding>
                 <element signature="n#!!doc" expanded="true" />
-                <element signature="e#20711#21330#0" />
-                <element signature="e#21405#22554#0" />
                 <element signature="n#!!block;n#buildNeighbor#0" />
                 <element signature="n#!!block;n#makeDetailLayer#0" />
                 <element signature="n#!!block;n#thematicMap#0" />
-                <element signature="n#!!block;n#positionBtn#0" />
               </folding>
             </state>
           </provider>
@@ -62,6 +61,7 @@
       <find>LOD_valid</find>
       <find>LOD</find>
       <find>detail_g</find>
+      <find>current</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -70,15 +70,17 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/main.js" />
         <option value="$PROJECT_DIR$/math_geometry.js" />
+        <option value="$PROJECT_DIR$/main.js" />
+        <option value="$PROJECT_DIR$/index.html" />
+        <option value="$PROJECT_DIR$/MyStyle.css" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-59" />
-    <option name="y" value="40" />
-    <option name="width" value="1946" />
+    <option name="x" value="136" />
+    <option name="y" value="15" />
+    <option name="width" value="1947" />
     <option name="height" value="1047" />
   </component>
   <component name="ProjectView">
@@ -92,11 +94,6 @@
             <path>
               <item name="CodePlayee.github.io" type="b2602c69:ProjectViewProjectNode" />
               <item name="CodePlayee.github.io" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="CodePlayee.github.io" type="b2602c69:ProjectViewProjectNode" />
-              <item name="CodePlayee.github.io" type="462c0819:PsiDirectoryNode" />
-              <item name="data" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -133,22 +130,23 @@
       <option name="presentableId" value="Default" />
       <updated>1551922292770</updated>
       <workItem from="1551922295806" duration="5079000" />
-      <workItem from="1551927497763" duration="3887000" />
+      <workItem from="1551927497763" duration="4334000" />
+      <workItem from="1551937644171" duration="5356000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="8966000" />
+    <option name="totallyTimeSpent" value="14769000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-39" y="27" width="1297" height="698" extended-state="0" />
+    <frame x="365" y="56" width="1298" height="698" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.14988105" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.1259905" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.3286219" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32685512" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
@@ -167,37 +165,40 @@
     <option name="version" value="1" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/main.js">
+    <entry file="file://$PROJECT_DIR$/math_geometry.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="858">
-          <caret line="382" column="47" selection-start-line="382" selection-start-column="47" selection-end-line="382" selection-end-column="47" />
-          <folding>
-            <element signature="n#!!doc" expanded="true" />
-            <element signature="e#20711#21330#0" />
-            <element signature="e#21405#22554#0" />
-            <element signature="n#!!block;n#buildNeighbor#0" />
-            <element signature="n#!!block;n#makeDetailLayer#0" />
-            <element signature="n#!!block;n#thematicMap#0" />
-            <element signature="n#!!block;n#positionBtn#0" />
-          </folding>
+        <state relative-caret-position="599">
+          <caret line="342" column="17" selection-start-line="342" selection-start-column="17" selection-end-line="342" selection-end-column="17" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/math_geometry.js">
+    <entry file="file://$PROJECT_DIR$/main.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="257">
-          <caret line="342" column="17" lean-forward="true" selection-start-line="342" selection-start-column="17" selection-end-line="342" selection-end-column="17" />
+        <state relative-caret-position="106">
+          <caret line="820" column="39" lean-forward="true" selection-start-line="820" selection-start-column="24" selection-end-line="820" selection-end-column="39" />
           <folding>
-            <element signature="e#11592#18399#0" />
-            <element signature="e#20173#21299#0" />
+            <element signature="n#!!doc" expanded="true" />
+            <element signature="n#!!block;n#buildNeighbor#0" />
+            <element signature="n#!!block;n#makeDetailLayer#0" />
+            <element signature="n#!!block;n#thematicMap#0" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="228">
-          <caret line="30" lean-forward="true" selection-start-line="30" selection-end-line="30" />
+        <state relative-caret-position="98">
+          <caret line="14" column="8" lean-forward="true" selection-start-line="14" selection-start-column="8" selection-end-line="14" selection-end-column="8" />
+          <folding>
+            <element signature="n#style#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MyStyle.css">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="227">
+          <caret line="90" column="16" lean-forward="true" selection-start-line="90" selection-start-column="16" selection-end-line="90" selection-end-column="16" />
         </state>
       </provider>
     </entry>

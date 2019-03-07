@@ -33,7 +33,7 @@ var showDetailLayer = false;//是否展示细节图层
 window.onload = load;
 
 function load() {
-    var map_div = document.getElementById("map_div");
+    var map_div = document.getElementById("holder");
     var width = map_div.offsetWidth,  // the width of map div element
         height = map_div.offsetHeight,
         active = d3.select(null),
@@ -69,14 +69,15 @@ function load() {
         .attr("height", height)
         .on("click", back2browse);
 
-    var btns = positionBtn(orgSvgCenter);
+    //var btns = positionBtn(orgSvgCenter);
+
     //复位按钮（回到浏览器打开时的状态）
-    btns[0].on('click', function () {
+    d3.select("#reset").on('click', function () {
         reset();
         zoom.LOD_valid = true;
     });
     //恢复正常缩放浏览效果按钮
-    btns[1].on('click', back2browse)
+    d3.select("#browse").on('click', back2browse)
     // 改变select的值时触发的事件
     $("#selection").change(function () {
         var selectedValue = $("#selection").val(); ////获取选中记录的value值
@@ -124,7 +125,7 @@ function load() {
 
     //窗口尺寸改变完成事件
     $(window).on("resizeend", function (e) {
-        var map_div = document.getElementById("map_div");
+        var map_div = document.getElementById("holder");
         var width = map_div.offsetWidth,
             height = map_div.offsetHeight;
 
@@ -135,7 +136,7 @@ function load() {
         d3.select("svg")
             .attr("transform", 'translate(' + trans[0] + "," + trans[1] + ")"); //.selectAll('g')
         lastSvgCenter = [width / 2, height / 2];
-        positionBtn(lastSvgCenter, false);
+      //  positionBtn(lastSvgCenter, false);
     });
 
     //页面加载后执行到上行。。。。。。。。。。。。。。。。。。。。。。。。。。。。
@@ -145,7 +146,7 @@ function load() {
     function zoomed() {
         baseLayers.style("stroke-width", 1.5 / d3.event.scale.toFixed(3) + "px");  //1.5
         baseLayers.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-        document.getElementById("show_scale").innerHTML = "<b>current scale:</b> " + zoom.scale().toFixed(2); //+zoom.LOD_valid
+        document.getElementById("show_scale").innerHTML = "当前尺度：" + zoom.scale().toFixed(2); //+zoom.LOD_valid
         LOD(zoom.scale()); // , zoom.LOD_valid
 
     }
@@ -229,7 +230,7 @@ function load() {
                     stopDefault(e);
                     stopBubble(e);
                     //注意：此处的group.projection并不会随group改变，而一直是最后一个图层的projection
-                    focus(d, /*group.projection,*/this, false);//d和d3中的data有关，而this是按下鼠标时其所在的dom元素
+                    focus(d, /*group.projection,*/this, true);//d和d3中的data有关，而this是按下鼠标时其所在的dom元素
                 })
                 .append("title")  // 添加tooltip（即鼠标悬浮停留一会，就会显示相关信息）
                 .text(function (d) {
@@ -380,7 +381,7 @@ function load() {
             }
 
             //7.17版本
-            var hitPolygon = getHitPolygon(current_this);
+          //  var hitPolygon = getHitPolygon(current_this);
           //  detail_g.remove();
           //  detail_g = baseLayers.append("g").attr("id","detail");
             //获取select标签选中的值
@@ -813,26 +814,6 @@ function thematicMap(departments) {
 
 }
 
-//设置复位按钮和下拉列表的位置
-function positionBtn(svgCenter) {
-    var width = svgCenter[0] * 2, height = svgCenter[1] * 2;
-    var resetBtn = d3.selectAll("#reset")
-        .attr('class', 'btn btn-primary')
-        .style("position", "absolute")
-        .style("left", width - 150 + "px")
-        .style("top", Math.round(height / 8) + "px");
-    var browseBtn = d3.selectAll("#browse")
-        .attr('class', 'btn btn-primary')
-        .style("position", "absolute")
-        .style("left", width - 150 + "px")
-        .style("top", Math.round(height / 8) + 50 + "px");
-    var selection = d3.selectAll("#selection")
-        .style("position", "absolute")
-        .style("left", width - 150 + "px")
-        .style("top", Math.round(height / 8) + 100 + "px");
-
-    return [resetBtn, browseBtn];
-}
 
 
 
