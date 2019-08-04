@@ -2,15 +2,6 @@
 //free to use only for study and research purpose,please contact 1295020109@qq.com for permission on other usage.
 //the project was established with ES5.
 
-// TODO list
-// 1.地图初始出现在svg中心位置,需要依据地图坐标中心设置投影中心 project.center()  //done
-// 2.依缩放比例(zoom.scale)显示不同细节层次,每次只显示一层  //done
-// 3.鼠标点击多边形，相应的区域边界颜色改变，标注也有相应变化//
-// 4.在多边形上实现自适应标注
-// 5.第五层点击放大聚焦有问题，推测是聚类时交换正六边形单元所致//done
-// 6.双击目标图斑，缩放显示其内部细节的同时，其他图斑也要有缩放//done
-// 7.最后图层补完整//done
-
 // Note（统一投影中心，便不再有投影不一致的问题）
 // 前3个基础图层，由于数据完整，轮廓一致，所以对应的投影projection近乎一致。即若数据完整，各图层的投影函数是相同的。
 // 后两个图层，由于数据缺失，轮廓改变，投影中心随之改变。
@@ -20,12 +11,12 @@
 var whole = new Array();//总体（第一层）
 var departments = new Array();//学部
 var subjects = new Array();//学科
-var sub_disciplines = new Array();//子学科
+var disciplines = new Array();//子学科
 var programs = new Array();//（个人项目）
 var groups = [];//存放所有图层g1,g2,g3,g4,g5
-var dgs_data = [];//存储细节图层数据的字典
+var dgsData = [];//存储细节图层数据的字典
 
-var hierarchy = [whole, departments, subjects, sub_disciplines, programs];//包含一个inUse属性，指示当前鼠标点击的多边形
+var hierarchy = [whole, departments, subjects, disciplines, programs];//包含一个inUse属性，指示当前鼠标点击的多边形
 var orgSvgCenter = [];//初始svg中心
 var lastSvgCenter = [];//窗口尺寸改变时的svg中心
 var showDetailLayer = false;//是否展示细节图层
@@ -33,9 +24,9 @@ var showDetailLayer = false;//是否展示细节图层
 window.onload = load;
 
 function load() {
-    var map_div = document.getElementById("holder");
-    var width = map_div.offsetWidth,  // the width of map div element
-        height = map_div.offsetHeight,
+    var mapDiv = document.getElementById("holder");
+    var width = mapDiv.offsetWidth,  // the width of map div element
+        height = mapDiv.offsetHeight,
         active = d3.select(null),
         current_level = 1,
         current_group = undefined;
@@ -69,21 +60,6 @@ function load() {
         .attr("height", height)
         .on("click", back2browse);
 
-    //var btns = positionBtn(orgSvgCenter);
-
-    //复位按钮（回到浏览器打开时的状态）
-    d3.select("#reset").on('click', function () {
-        reset();
-        zoom.LOD_valid = true;
-    });
-    //恢复正常缩放浏览效果按钮
-    d3.select("#browse").on('click', back2browse)
-    // 改变select的值时触发的事件
-    $("#selection").change(function () {
-        var selectedValue = $("#selection").val(); ////获取选中记录的value值
-        selectChangeHandler(selectedValue);
-    });
-
     var baseLayers = svg.append("g");//包含各基本图层的g
 
     var g1 = baseLayers.append("g");//第一层
@@ -98,7 +74,20 @@ function load() {
     g5.level = 5, g5.id = "g5";
     groups = [g1, g2, g3, g4, g5];
 
-    var detail_g = baseLayers.append("g").attr("id","detail")//点击某个多边形放大后，展示其内部细节的容器
+    var detail_g = baseLayers.append("g").attr("id", "detail")//点击某个多边形放大后，展示其内部细节的容器
+
+    //复位按钮（回到浏览器打开时的状态）
+    d3.select("#reset").on('click', function () {
+        reset();
+        zoom.LOD_valid = true;
+    });
+    //恢复正常缩放浏览效果按钮
+    d3.select("#browse").on('click', back2browse)
+    // 改变select的值时触发的事件
+    d3.select("#selection").on('change', function (e) {
+        //notice e is undefined here, you should get the event obj via d3.event
+        selectChangeHandler(d3.event.currentTarget.value);
+    });
 
     svg.call(zoom) // delete this line to disable free zooming
         .call(zoom.event);
@@ -123,36 +112,38 @@ function load() {
         //groups[i].style("visibility", "hidden");
     }
 
-    //窗口尺寸改变完成事件
-    $(window).on("resizeend", function (e) {
-        var map_div = document.getElementById("holder");
-        var width = map_div.offsetWidth,
-            height = map_div.offsetHeight;
-
-        var svg = d3.select("svg")
+    //窗口尺寸改变的事件处理，使用了节流
+    window.addEventListener('resize', throttle(function(){
+        var mapDiv = document.getElementById("holder");
+        var width = mapDiv.offsetWidth,
+            height = mapDiv.offsetHeight;
+       
+        d3.select("svg")
             .attr("width", width)
             .attr("height", height);
-        var trans = [width / 2 - orgSvgCenter[0], height / 2 - orgSvgCenter[1]];
+        var trans = [width / 2 - lastSvgCenter[0], height / 2 - lastSvgCenter[1]];
+
+        // the center of the map is not precise and reminds to be solved
         d3.select("svg")
-            .attr("transform", 'translate(' + trans[0] + "," + trans[1] + ")"); //.selectAll('g')
+            .attr("transform", 'translate(' + trans[0] + "," + trans[1] + ")")
+            .call(zoom.translate([lastSvgCenter[0] - orgSvgCenter[0], lastSvgCenter[1] - orgSvgCenter[1]]).scale(1).event);
+
         lastSvgCenter = [width / 2, height / 2];
-      //  positionBtn(lastSvgCenter, false);
-    });
+    }));
 
-    //页面加载后执行到上行。。。。。。。。。。。。。。。。。。。。。。。。。。。。
-
+    //页面加载后执行到此
 
     //缩放函数
     function zoomed() {
         baseLayers.style("stroke-width", 1.5 / d3.event.scale.toFixed(3) + "px");  //1.5
         baseLayers.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
         document.getElementById("show_scale").innerHTML = "当前尺度：" + zoom.scale().toFixed(2); //+zoom.LOD_valid
-        LOD(zoom.scale()); // , zoom.LOD_valid
-
+        LOD(zoom.scale()); 
+        //zoom.LOD_valid && hideDetailPanel();
     }
 
-// If the drag behavior prevents the default click,
-// also stop propagation so we don’t click-to-zoom.
+    // If the drag behavior prevents the default click,
+    // also stop propagation so we don’t click-to-zoom.
     function stopped() {
         if (d3.event.defaultPrevented) d3.event.stopPropagation();
     }
@@ -230,7 +221,7 @@ function load() {
                     stopDefault(e);
                     stopBubble(e);
                     //注意：此处的group.projection并不会随group改变，而一直是最后一个图层的projection
-                    focus(d, /*group.projection,*/this, true);//d和d3中的data有关，而this是按下鼠标时其所在的dom元素
+                    focus(d, this, true);//d和d3中的data有关，而this是按下鼠标时其所在的dom元素
                 })
                 .append("title")  // 添加tooltip（即鼠标悬浮停留一会，就会显示相关信息）
                 .text(function (d) {
@@ -245,7 +236,7 @@ function load() {
                     return a !== b;
                 }))   //datum 单数
                 .attr("class", function (d) {
-                    if(group.level<5)
+                    if (group.level < 5)
                         return "polygon_borders";
                     else
                         return "hexagon_borders";
@@ -280,129 +271,116 @@ function load() {
     //鼠标在图斑上的点击事件，效果是目标图斑先居中，滚动鼠标才将相应区域缩放
     //d和d3中的data有关，而this是按下鼠标时光标所在的dom元素
     function focus(d, current_this, normal) {    //在基础图层的图斑上双击时，normal为true.
-        {
-            d3.select("#show_detail")   //弹出左侧悬浮区域
-                .transition()
-                .duration(750)
-                .style("left", 0 + "px")
-                .style("opacity", 0.8);
+        d3.select("#show_detail")   //弹出左侧悬浮区域
+            .transition()
+            .duration(750)
+            .style("left", 0 + "px")
+            .style("opacity", 0.8);
 
-            current_group = whichGroup(groups);
-            zoom.LOD_valid = false;
-            window.mousemoveEffect = false;
+        current_group = whichGroup(groups);
+        zoom.LOD_valid = false;
+        window.mousemoveEffect = false;
 
-            //更新展示面板的信息
-            var msg = [];
-            var properties = d.properties || d.info.properties;
-            for (let item in properties) {
-                let character = e2c(item, current_group.level);
-                if (properties[item] && character !== "")
-                    if (parseInt(properties[item]) > 0 || isNaN(parseInt(properties[item])))
-                        msg.push(character + ": " + properties[item]);
+        //更新展示面板的信息
+        var msg = [];
+        var properties = d.properties || d.info.properties;
+        for (let item in properties) {
+            let character = e2c(item, current_group.level);
+            if (properties[item] && character !== "")
+                if (parseInt(properties[item]) > 0 || isNaN(parseInt(properties[item])))
+                    msg.push(character + ": " + properties[item]);
+        }
+        var detailsUpdate = d3.select("body").select("div").select("#show_detail").select("#detail")
+            .selectAll("p")
+            .data(msg);
+
+        detailsUpdate.enter()//initialize entering paras
+            .append("p")
+            .attr("class", "detail")
+            .text(function (d) {
+                return d;
+            });
+        detailsUpdate.exit().remove();
+
+        detailsUpdate
+            .attr("class", "detail")
+            .text(function (d) {
+                return d;
+            })
+
+        if (active.node() === current_this) {
+            return back2browse();//在已激活的多边形上再次点击,则恢复到本图层初始状态
+        }
+
+        //将上一步激活的多边形恢复
+        if (active.node() != null) {
+            active.style("opacity", "1");
+            active.style("visibility", "visible");
+            active.style("fill", function () {
+                if (active.node().__data__.info)
+                    return active.node().__data__.info.fillColor;
+                else
+                    return active.node().__data__.fillColor;
+            });
+            active.classed("active", false);
+        }
+
+        active = d3.select(current_this).classed("active", true);
+        active.style("fill", "#ff4433"); //鼠标点击区域变色
+
+        // showDetailLayer = true;//可以显示细节图层
+        //7.16版本才有用
+        if (normal === true) {
+            //获取当前点击时鼠标所在图斑的下一图层内的某一具体图斑
+            var hitPolygon = getHitPolygon(current_this);
+
+            //放大与对焦，改为只对焦不放大
+            var bounds = undefined;
+            if (parseInt(d.properties.depth) > 4) {
+                bounds = getRangeByCoordinates(d.geometry.coordinates[0], hitPolygon.projection);
             }
-            var detailsUpdate = d3.select("body").select("div").select("#show_detail").select("#detail")
-                .selectAll("p")
-                .data(msg);
-
-            detailsUpdate.enter()//initialize entering paras
-                .append("p")
-                .attr("class", "detail")
-                .text(function (d) {
-                    return d;
-                });
-            detailsUpdate.exit().remove();
-
-            detailsUpdate
-                .attr("class", "detail")
-                .text(function (d) {
-                    return d;
-                })
-
-            if (active.node() === current_this) {
-                return back2browse();//在已激活的多边形上再次点击,则恢复到本图层初始状态
+            else {
+                var current_path = d3.geo.path().projection(hitPolygon.projection);//此处的projection要以hitPolygon存储的为准
+                bounds = current_path.bounds(d);  //path.bounds(d)
             }
+           
+            var x = (bounds[0][0] + bounds[1][0]) / 2,
+                y = (bounds[0][1] + bounds[1][1]) / 2,
+                centerX = lastSvgCenter[0],//当前窗口的中心x值
+                centerY = lastSvgCenter[1];
+                console.log('lastSvgCenter:',centerX,centerY)
 
-            //将上一步激活的多边形恢复
-            if (active.node() != null) {
-                active.style("opacity", "1");
-                active.style("visibility", "visible");
-                active.style("fill", function () {
-                    if (active.node().__data__.info)
-                        return active.node().__data__.info.fillColor;
-                    else
-                        return active.node().__data__.fillColor;
-                });
-                active.classed("active", false);
+            var scale = zoom.scale(),
+                translate = [centerX - scale * x, centerY - scale * y];
+            //window.translate = translate;
+
+            //放大后显示细节,首先将上一步放大的内容清空
+            detail_g.remove();
+            detail_g = baseLayers.append("g").attr("id", "detail_g");
+            var selection = d3.select("#selection")[0][0];
+            var selectValue = selection.options[selection.selectedIndex].value;
+            dgsData = displayDetail(current_group, selectValue, detail_g, hitPolygon);
+            //var dg = detail_g.select("#dg" + current_level).style("display", "");//显示当前细节图层
+
+            if (current_group.level < 5) {
+                svg.transition()
+                    .duration(750)
+                    .call(zoom.translate(translate).scale(scale).event);
             }
-
-            active = d3.select(current_this).classed("active", true);
-            active.style("fill", "#ff4433"); //鼠标点击区域变色
-
-            // showDetailLayer = true;//可以显示细节图层
-            //7.16版本才有用
-            if (normal === true) {
-                //获取当前点击时鼠标所在图斑的下一图层内的某一具体图斑
-                var hitPolygon = getHitPolygon(current_this);
-
-                //放大与对焦，改为只对焦不放大
-                var bounds = undefined;
-                if (parseInt(d.properties.depth) > 4) {
-                    bounds = getRangeByCoordinates(d.geometry.coordinates[0], hitPolygon.projection);
-                }
-                else {
-                    var current_path = d3.geo.path().projection(hitPolygon.projection);//此处的projection要以hitPolygon存储的为准
-                    bounds = current_path.bounds(d);  //path.bounds(d)
-                }
-                // var dx = Math.abs(bounds[1][0] - bounds[0][0]),
-                //     dy = Math.abs(bounds[1][1] - bounds[0][1]);
-                var x = (bounds[0][0] + bounds[1][0]) / 2,
-                    y = (bounds[0][1] + bounds[1][1]) / 2,
-                    centerX = lastSvgCenter[0],//当前窗口的中心x值
-                    centerY = lastSvgCenter[1];
-
-                // var scale = Math.max(1, Math.min(14, 0.9 / Math.max(dx / (width * 0.8), dy / (height * 0.8)))),
-                var scale = zoom.scale(),
-                    translate = [centerX - scale * x, centerY - scale * y];
-                window.translate = translate;
-
-                //放大后显示细节,首先将上一步放大的内容清空
-                detail_g.remove();
-                detail_g = baseLayers.append("g").attr("id", "detail_g");
-                var selection = d3.select("#selection")[0][0];
-                var selectValue = selection.options[selection.selectedIndex].value;
-                dgs_data = displayDetail(current_group, selectValue, detail_g, hitPolygon);
-                //var dg = detail_g.select("#dg" + current_level).style("display", "");//显示当前细节图层
-
-                if (current_group.level < 5) {
-                    svg.transition()
-                        .duration(750)
-                        .call(zoom.translate(translate).scale(scale).event);
-                }
-            }
-
-            //7.17版本
-          //  var hitPolygon = getHitPolygon(current_this);
-          //  detail_g.remove();
-          //  detail_g = baseLayers.append("g").attr("id","detail");
-            //获取select标签选中的值
-           // var selection = d3.select("#selection")[0][0];
-           // var selectValue = selection.options[selection.selectedIndex].value;
-          //  displayDetail(selectValue, detail_g, hitPolygon);
-          //  detail_g.style("display","none");
         }
     }
 
-//根据缩放倍数显示不同细节图层
+    //根据缩放倍数显示不同细节图层
     function LOD(scale) {  // , valid
         var scale = scale.toFixed(1);
         var baseHide = function () {
             for (var i = 0; i < groups.length; i++) {
-               groups[i].style("display", "none");
-               // groups[i].selectAll("path").style("visibility","hidden");
+                groups[i].style("display", "none");
+                // groups[i].selectAll("path").style("visibility","hidden");
             }
         }
         var current_group = whichGroup(groups);
-        groups.lastLevel=current_group.level;
+        groups.lastLevel = current_group.level;
 
         if (scale - 1.2 <= 0.1 && scale - 1.2 >= -0.1)  //中间点1.2    范围 1.1-1.3
         {
@@ -419,7 +397,7 @@ function load() {
         {
             baseHide();
             g2.style("display", "");
-           // g2.selectAll("path").style("visibility","visible");
+            // g2.selectAll("path").style("visibility","visible");
             g2.mScale = 1.5;
             g2.maxScale = 1.9;
             g2.minScale = 1.3;
@@ -440,7 +418,7 @@ function load() {
         {
             baseHide();
             g4.style("display", "");
-           // g4.selectAll("path").style("visibility","visible");
+            // g4.selectAll("path").style("visibility","visible");
             g4.mScale = 3;
             g4.maxScale = 5.2;
             g4.minScale = 2.7;
@@ -449,7 +427,7 @@ function load() {
         if (scale > 5.2) {
             baseHide();
             g5.style("display", "");
-          //  g5.selectAll("path").style("visibility","visible");
+            //  g5.selectAll("path").style("visibility","visible");
             g5.mScale = 5.4;
             g5.maxScale = 20;
             g5.minScale = 5.3;
@@ -470,10 +448,10 @@ function load() {
                 if (active.node().__data__.properties) {
                     if (active.node().__data__.properties.name !== "地理学" && active.node().__data__.properties.depth === "3") {
                         var newPath = d3.geo.path().projection(groups[3].projection);
-                        var data = dgs_data["dg3"];
+                        var data = dgsData["dg3"];
                         if (data) {
                             detail_g.select("#dg3").selectAll("path")
-                                .data(dgs_data["dg3"])
+                                .data(dgsData["dg3"])
                                 .attr("d", newPath);
                         }
                     }
@@ -483,9 +461,9 @@ function load() {
                 if (active.node().__data__.properties) {
                     if (active.node().__data__.properties.name !== "地理学" && active.node().__data__.properties.depth === "3") {
                         var newPath = d3.geo.path().projection(groups[0].projection);
-                        if (dgs_data["dg3"]) {
+                        if (dgsData["dg3"]) {
                             detail_g.select("#dg3").selectAll("path")
-                                .data(dgs_data["dg3"])
+                                .data(dgsData["dg3"])
                                 .attr("d", newPath);
                         }
                     }
@@ -493,18 +471,15 @@ function load() {
             }
 
         }
-        // if (scale <= current_group.minScale) {
-        //     detail_g.selectAll("g").style("display", "none");
-        //     active.style("fill", "#ff4433");
-        // }
 
-        if(groups.lastLevel !==current_level){ //若缩放导致显示的图层改变
+        if (groups.lastLevel !== current_level) { //若缩放导致显示的图层改变
             recoverActive();
             detail_g.remove();
+            hideDetailPanel()
         }
     }
 
-//鼠标点击已激活多边形区域或者背景矩形区域，恢复到初始状态
+    //鼠标点击已激活多边形区域或者背景矩形区域，恢复到初始状态
     function reset() {
         //隐藏左侧显示细节面板
         hideDetailPanel();
@@ -529,7 +504,7 @@ function load() {
         svg.transition()
             .duration(750)
             .call(zoom.translate([lastSvgCenter[0] - orgSvgCenter[0], lastSvgCenter[1] - orgSvgCenter[1]]).scale(1).event);
-        // .call(zoom.translate([0, 0]).scale(1).event);
+        
     }
 
     //将处于激活状态的图斑恢复正常
@@ -552,6 +527,7 @@ function load() {
     //恢复正常浏览状态
     function back2browse() {
         showDetailLayer = false;
+        var current_group=whichGroup(groups)
         current_group.style("opacity", "1");
 
         detail_g.remove();//移除展示细节的图层
@@ -594,7 +570,7 @@ function load() {
 
         //7.17版本
         detail_g.remove();
-        detail_g = baseLayers.append("g").attr("id","detail");
+        detail_g = baseLayers.append("g").attr("id", "detail");
         displayDetail(selectedValue, detail_g, hierarchy.inUse);
     }
 
@@ -615,11 +591,24 @@ function stopDefault(e) {
 function stopBubble(e) {
     //如果提供了事件对象，是非IE浏览器
     if (e && e.stopPropagation)
-    //使用W3C的stopPropagation()方法
+        //使用W3C的stopPropagation()方法
         e.stopPropagation();
     else
-    //使用IE的cancelBubble = true来取消事件冒泡
+        //使用IE的cancelBubble = true来取消事件冒泡
         window.event.cancelBubble = true;
+}
+
+//函数节流
+function throttle(fn) {
+    let canRun = true; // 通过闭包保存一个标记
+    return function () {
+        if (!canRun) return; 
+        canRun = false; 
+        setTimeout(function(){
+            fn.apply(this, arguments);
+            canRun = true;
+        }, 100);
+    };
 }
 
 //隐藏左侧显示细节面板
@@ -702,8 +691,8 @@ function makeDetailLayer(dGroups, selectedProperty, hierarchy) {
                 property_values = result.property_values;
 
             var maxValue = d3.max(property_values, function (d) {
-                    return parseFloat(d[selectedProperty]);
-                }),
+                return parseFloat(d[selectedProperty]);
+            }),
                 minValue = d3.min(property_values, function (d) {
                     return parseFloat(d[selectedProperty]);
                 });
@@ -717,8 +706,8 @@ function makeDetailLayer(dGroups, selectedProperty, hierarchy) {
 
                 if (i === hierarchy.length - 2) {
                     var path2 = d3.geo.path().projection(groups[3].projection);
-                   // dGroups[4].style("display", "none");
-                     dGroups[4].style("visibility", "hidden");
+                    // dGroups[4].style("display", "none");
+                    dGroups[4].style("visibility", "hidden");
                     appendPath2g(dGroups[4], [data[k]], path2);
                 }
             }
@@ -755,17 +744,17 @@ function thematicMap(departments) {
         .domain([d3.min(data, function (d) {
             return parseInt(d.pzzzje);
         }),
-            d3.max(data, function (d) {
-                return parseInt(d.pzzzje);
-            })])
+        d3.max(data, function (d) {
+            return parseInt(d.pzzzje);
+        })])
         .range([15, 45]);
     var xsScale = d3.scale.linear()
         .domain([d3.min(data, function (d) {
             return parseInt(d.pzzzxs);
         }),
-            d3.max(data, function (d) {
-                return parseInt(d.pzzzxs);
-            })])
+        d3.max(data, function (d) {
+            return parseInt(d.pzzzxs);
+        })])
         .range([10, 36]);
 
 

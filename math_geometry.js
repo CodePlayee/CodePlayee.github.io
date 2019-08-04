@@ -38,14 +38,6 @@ function getRangeByCoordinates(coordinates/*,projection*/) {
     else {
         pts = coordinates;
     }
-    // for(var j=0;j<coordinates.length;j++)
-    // {
-    //     for(var k=0;k<coordinates[j].length;k++)
-    //     {
-    //         var pt=[coordinates[j][k][0] ,coordinates[j][k][1]];
-    //         pts.push(pt);
-    //     }
-    // }
 
     var range = [];
 
@@ -149,7 +141,7 @@ function reorganize(d, projection) {
             });
 
             addSub_Inner(d, subjects, sub_discipline);
-            return sub_disciplines.push(sub_discipline);
+            return disciplines.push(sub_discipline);
             break;
         case 5://项目  （基于深度学习的城市情感空间构建研究）
             var program = ({
@@ -161,7 +153,7 @@ function reorganize(d, projection) {
                 "center": getGravityCenter(d.geometry.coordinates[0])//正六边形中心
             });
 
-            addSub_Inner(d, sub_disciplines, program);
+            addSub_Inner(d, disciplines, program);
             return programs.push(program);
             break;
     }
@@ -218,83 +210,6 @@ function back2GeoJSON(coordinates, subComponents, flag, zxs, group) {
     }
 
 }
-
-
-//放大某一多边形后，显示其内部细节（7.16版本）
-
-// function displayDetail(group,selectedProperty, detail_g, hitPolygon) {
-//     if (!hitPolygon.subComponents) return; //到达最后一层（个人项目层）
-//     var subComponents = hitPolygon.subComponents;
-//     var coordinates=hitPolygon.innerPolygons;
-//     var groupIndex=group.level;
-//     var dgs_data=[];
-//
-//     var drawSubPaths = function (result,g,projection) {
-//         var data = result.data;
-//         dgs_data[g[0][0].id]=data;
-//         var property_values = result.property_values;
-//
-//         var maxValue = d3.max(property_values, function (d) {
-//                 return parseFloat(d[selectedProperty]);
-//             }),
-//             minValue = d3.min(property_values, function (d) {
-//                 return parseFloat(d[selectedProperty]);
-//             });
-//
-//         var path = d3.geo.path()
-//             .projection(projection);
-//
-//         g.selectAll("path")
-//             .data(data)
-//             .enter()
-//             .append("path")
-//             .attr("d", path)
-//             .style("stroke", "#fff")
-//             .style("fill", function (d) {
-//                 return setColor(minValue, maxValue, selectedProperty, d);
-//             })
-//             .append("title")
-//             .text(function (d) {
-//                 return d.info.properties.name
-//             });
-//     }
-//
-//     var makeSub = function (g,coordinates,subComponents,proj) {
-//         if (subComponents.length > 0) {
-//             var result=back2GeoJSON(coordinates,subComponents,true);
-//             drawSubPaths(result,g,proj);
-//         }
-//     }
-//
-//     var proj=groups[0].projection;//前3个图层投影函数一致
-//     if(group.level>=4)
-//         proj=groups[3].projection;
-//
-//     while (groupIndex<groups.length){
-//         var g = detail_g.append("g")
-//             .attr("id",function () {return "dg"+groupIndex;})
-//             .style("display","none");
-//         groupIndex++;
-//         if(groupIndex>4)
-//             proj=groups[3].projection;
-//
-//         makeSub(g,coordinates,subComponents,proj);
-//         var newSubComponents=[],newCoordinates=[];
-//         for(var i=0,len=subComponents.length;i<len;i++){
-//             if(subComponents[i].subComponents){
-//                 for(var j=0,l=subComponents[i].subComponents.length;j<l;j++){
-//                     newSubComponents.push(subComponents[i].subComponents[j]);
-//                     newCoordinates.push(subComponents[i].innerPolygons[j]);
-//                 }
-//             }
-//         }
-//         subComponents=newSubComponents;
-//         coordinates=newCoordinates;
-//     }
-//
-//     return dgs_data;
-// }
-
 
 //放大某一多边形后，显示其内部细节
 function displayDetail(selectedProperty, g, hit_polygon) {
@@ -422,8 +337,6 @@ function clusterByOrganization(projection, programs, group) {
         eachCluster.push(clustered.length);
     }
 
-    // var clusterData = [];//项目数大于1的集群所在数组（元素仍是单个项目）
-    // var singleData = []; //单个的项目所在的数组
     var wholeData = [];
 
     var min = d3.min(eachCluster, function (d) {
@@ -452,30 +365,6 @@ function clusterByOrganization(projection, programs, group) {
                 "properties": clusters[a][b].properties,
                 "type": "Feature"
             });
-
-            // if(clusters[a].length>1){
-            //     clusterData.push( {
-            //         "fillColor": color,
-            //         "geometry": {
-            //             "type": "Polygon",
-            //             "coordinates": clusters[a][b].geometry
-            //         },
-            //         "properties":clusters[a][b].properties,
-            //         "type": "Feature"
-            //     });
-            // }
-            // else{
-            //     singleData.push( {
-            //         "fillColor":"#eee",
-            //         "geometry": {
-            //             "type": "Polygon",
-            //             "coordinates": [clusters[a][b].geometry]
-            //         },
-            //         "properties":clusters[a][b].properties,
-            //         "type": "Feature"
-            //     });
-            // }
-
         }
     }
 
