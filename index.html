@@ -5,10 +5,9 @@
     <title>自然基金项目隐喻地图</title>
 </head>
 
-<body class="full" style="display: -moz-box; display: -webkit-box " >
+<body class="full">
 <div class="box-vertical full">
     <div id="header">自然科学基金项目隐喻地图</div>
-    <!--地图显示区域-->
     <div id="holder">
            <div class="map-wrapper">
                <svg id="map_svg"></svg>
@@ -16,7 +15,7 @@
            <div class="rightCtrl">
                <button id="reset" class="btn btn-primary">reset</button>
                <button id="browse" class="btn btn-primary">browse</button>
-               <select name="option" id="selection">
+               <select id="selection">
                    <option value="slsqxs">受理申请项数</option>
                    <option value="slsqje">受理申请金额</option>
                    <option value="pzzzxs">批准资助项数</option>
@@ -32,16 +31,11 @@
 
 </div>
 
-<link href="MyStyle.css" rel="stylesheet" type="text/css"/>
-<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link href="index.css" rel="stylesheet" type="text/css"/>
 <script src="lib/D3_v3.js"></script>
 <script src="lib/queue_v1.js"></script>
-<script src="lib/jquery-2.1.4.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jquery.resizeend@latest/lib/jquery.resizeend.min.js"></script>
-<!--<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>-->
 <script src="lib/topojson_1.6.20.js"></script>
 <script src="lib/topojson-server.js"></script>
-<!--<script src="https://cdn.bootcss.com/topojson/1.6.20/topojson.js"></script>-->
 <script src="math_geometry.js" ></script>
 <script src="poly_decoration.js"></script>
 <script src="main.js" ></script>
