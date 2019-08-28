@@ -53,7 +53,14 @@ div#header{
 }
 
 #reset,#browse{
-    margin: 5px 0 5px 0;
+    margin: 5px;
+    padding:3px 5px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    width:64px;
 }
 
 /*显示当前缩放倍数以及多边形信息*/
@@ -76,7 +83,7 @@ div#show_detail{
 
 
 select{
-    border: solid 2px #0076a3;
+    border: solid 2px #0389be;
     /*很关键：将默认的select选择框样式清除*/
     appearance:none;
     -moz-appearance:none;
@@ -84,13 +91,17 @@ select{
     /*在选择框的最右侧中间显示小箭头图片*/
     background: url("imag/arrow.png") no-repeat scroll right center transparent;
     /*为下拉小箭头留出一点位置，避免被文字覆盖*/
-    padding-right: 14px;
+    padding:5px 14px 5px 8px;
     width:auto;
-    height:25px;
-}
-#selection{
+    height:34px;
+    position: relative;
+    left:5px;
+    border-radius: 5px;
+    background-color: #0076a3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     color:white;
-    margin-top: 5px;
 }
 
 option{
