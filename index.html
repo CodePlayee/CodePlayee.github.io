@@ -1,43 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>自然基金项目隐喻地图</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Sherry & Gorden</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+      background: rgba(255, 247, 240, 1);
+      /* background-size: cover;
+      background-image: url('./static/imgs/YourName.png'); */
+    }
+
+    #header {
+      padding: 15px;
+      text-align: center;
+      font-size: 200%;
+      color: salmon
+    }
+
+    #mycanvas {
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
 </head>
 
-<body class="full">
-<div class="box-vertical full">
-    <div id="header">隐喻地图</div>
-    <div id="holder">
-           <div class="map-wrapper">
-               <svg id="map_svg"></svg>
-           </div>
-           <div class="rightCtrl">
-               <button id="reset" class="btn btn-primary">reset</button>
-               <button id="browse" class="btn btn-primary">browse</button>
-               <select id="selection">
-                   <option value="slsqxs">受理申请项数</option>
-                   <option value="slsqje">受理申请金额</option>
-                   <option value="pzzzxs">批准资助项数</option>
-                   <option value="pzzzje">批准资助金额</option>
-               </select>
-           </div>
-    </div>
-
-    <div id="show_detail" class="detail-desc">
-        <p id="show_scale">当前尺度：1</p>
-        <div id="detail"></div>
-    </div>
-
-</div>
-
-<link href="src/index.css" rel="stylesheet" type="text/css"/>
-<script src="lib/d3_v3_min.js"></script>
-<script src="lib/queue_v1.js"></script>
-<script src="lib/topojson_min.js"></script>
-<script src="lib/topojson-server_min.js"></script>
-<script src="src/util.js" ></script>
-<script src="src/main.js" ></script>
-
+<body>
+  <p id='header'>A page for Sherry by Gorden</p>
+  <canvas id="mycanvas" width='622' height='843'></canvas>
+  <img id="tulip" src="./static/imgs/heart.png" alt="heart">
+  <script src="./static/js/actions.js"></script>
+  <script src="./static/js/minify.js"></script>
 </body>
+
 </html>
