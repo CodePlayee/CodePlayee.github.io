@@ -5,22 +5,22 @@ const diffDays = Math.ceil(timesDiff / (1000 * 60 * 60 * 24)); //向上取整
 const daysDom = document.querySelector("#title");
 daysDom.innerHTML = "A page for Sherry by Gorden\n" + diffDays + "days";
 
-const cvs = document.querySelector("#canvas4three");
+const cvs = document.querySelector("#heartCvs");
 const scene2 = new THREE.Scene();
-scene2.background = new THREE.Color(250, 240, 240, 1);
+scene2.background = new THREE.Color("rgb(255, 247, 240)");
 
-const camera = new THREE.PerspectiveCamera(
+const camera2 = new THREE.PerspectiveCamera(
   40,
   window.innerWidth / window.innerHeight,
   0.1,
   1000
 );
-camera.position.z = 20;
+camera2.position.z = 18;
 
 addLight(scene2);
 
-const renderer = new THREE.WebGLRenderer({ canvas: cvs, antialias: true });
-resizeRenderToDispalySize(renderer);
+const renderer2 = new THREE.WebGLRenderer({ canvas: cvs, antialias: true });
+resizeRenderToDispalySize(renderer2);
 
 const mesh = addHeart();
 
@@ -28,14 +28,14 @@ window.onload = function() {
   requestAnimationFrame(render);
 };
 
-function resizeRenderToDispalySize(renderer) {
-  const cvs = renderer.domElement;
+function resizeRenderToDispalySize(renderer2) {
+  const cvs = renderer2.domElement;
   const pixelRatio = window.devicePixelRatio; //handling HD-DPI displays
   const width = (cvs.clientWidth * pixelRatio) | 0;
   const height = (cvs.clientHeight * pixelRatio) | 0;
   const needResize = width !== cvs.width || height !== cvs.height;
   if (needResize) {
-    renderer.setSize(width, height, false);
+    renderer2.setSize(width, height, false);
   }
   return needResize;
 }
@@ -100,15 +100,15 @@ function addHeart() {
 
 function render(time) {
   time *= 0.001;
-  if (resizeRenderToDispalySize(renderer)) {
-    const cvs = renderer.domElement;
-    camera.aspect = cvs.clientWidth / cvs.clientHeight;
-    camera.updateProjectionMatrix();
+  if (resizeRenderToDispalySize(renderer2)) {
+    const cvs = renderer2.domElement;
+    camera2.aspect = cvs.clientWidth / cvs.clientHeight;
+    camera2.updateProjectionMatrix();
   }
   const rot = time * 0.3;
   mesh.rotation.x = rot;
   mesh.rotation.y = rot;
 
-  renderer.render(scene2, camera);
+  renderer2.render(scene2, camera2);
   requestAnimationFrame(render);
 }

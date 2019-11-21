@@ -27,12 +27,19 @@
         display: inline-block;
       }
 
-      #canvas4three {
+      #heartCvs {
+        position: absolute;
+        top: 20px;
+        left: 50px;
+        width: 15vw;
+        height: 15vh;
+      }
+      #cosmosCvs {
         position: absolute;
         top: 15px;
-        left: 50px;
-        width: 10vw;
-        height: 10vh;
+        right: 10px;
+        width: 25vw;
+        height: 25vh;
       }
 
       #mycanvas {
@@ -45,7 +52,8 @@
   <body>
     <div>
       <p id="title">A page for Sherry by Gorden</p>
-      <canvas id="canvas4three"></canvas>
+      <canvas id="heartCvs"></canvas>
+      <canvas id="cosmosCvs"></canvas>
     </div>
     <div>
       <canvas id="mycanvas"></canvas>
@@ -56,4 +64,5 @@
   </body>
   <script src="./lib/three_min.js"></script>
   <script src="./static/js/effectsByThreeJS.js"></script>
+  <script src="./static/js/cosmos.js"></script>
 </html>
