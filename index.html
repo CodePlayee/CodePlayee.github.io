@@ -1,85 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Document</title>
-    <style>
-      html,
-      body,
-      #bg {
-        width: 100%;
-        height: 100%;
-      }
+<head>
+    <meta charset="UTF-8">
+    <title>自然基金项目隐喻地图</title>
+</head>
 
-      #bg {
-        background-color: lightpink;
-        font-family: "华文细黑";
-        background: url("./static/imgs/christmas.jpg") repeat-y;
-        background-size: 100% 100%;
-        overflow: hidden;
-        filter: blur(3px);
-      }
-
-      #content {
-        position: relative;
-        top: -90%;
-        text-align: center;
-        /* display: flex;
-        justify-content: center;
-        align-items: center; */
-        font-family: "times new roman";
-        font-size: 20pt;
-        color: gold;
-      }
-      #enterKey {
-        display: flex;
-        justify-content: center;
-      }
-      #wordDiv {
-        position: relative;
-        top: 15px;
-        display: flex;
-        justify-content: center;
-        text-align: center;
-        display: none;
-      }
-
-      #snowbox {
-        filter: blur(3px);
-      }
-    </style>
-  </head>
-  <body>
-    <div id="bg"></div>
-    <div id="content">
-      <h1 id="title">A page for Sherry by Gorden</h1>
-      <h2 id="timing"></h2>
-      <div id="enterKey">
-        <input
-          id="key"
-          type="password"
-          style="width:200px;height:2em"
-          placeholder="enter key to see sth..."
-        />
-        <button id="seeWordsBtn">click</button>
-      </div>
-      <div id="wordDiv">
-        <audio
-          autoplay="autoplay"
-          controls="controls"
-          loop="loop"
-          preload="auto"
-          src="./static/music/Something Just Like This.mp3"
-        ></audio>
-      </div>
+<body class="full">
+<div class="box-vertical full">
+    <div id="header">隐喻地图</div>
+    <div id="holder">
+           <div class="map-wrapper">
+               <svg id="map_svg"></svg>
+           </div>
+           <div class="rightCtrl">
+               <button id="reset" class="btn btn-primary">reset</button>
+               <button id="browse" class="btn btn-primary">browse</button>
+               <select id="selection">
+                   <option value="slsqxs">受理申请项数</option>
+                   <option value="slsqje">受理申请金额</option>
+                   <option value="pzzzxs">批准资助项数</option>
+                   <option value="pzzzje">批准资助金额</option>
+               </select>
+           </div>
     </div>
-  </body>
 
-  <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
-  <script src="https://d3js.org/d3.v5.min.js"></script>
+    <div id="show_detail" class="detail-desc">
+        <p id="show_scale">当前尺度：1</p>
+        <div id="detail"></div>
+    </div>
 
-  <script src="./static/js/chrismas.js"></script>
-  <script src="./static/js/words.js"></script>
+</div>
+
+<link href="src/index.css" rel="stylesheet" type="text/css"/>
+<script src="lib/d3_v3_min.js"></script>
+<script src="lib/queue_v1.js"></script>
+<script src="lib/topojson_min.js"></script>
+<script src="lib/topojson-server_min.js"></script>
+<script src="src/util.js" ></script>
+<script src="src/main.js" ></script>
+
+</body>
 </html>
