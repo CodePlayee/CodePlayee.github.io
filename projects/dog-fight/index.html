@@ -1,98 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2305070d'/%3E%3Cpath d='M5 22 14 4h4l9 18h-5l-2-5h-8l-2 5Zm9-9h4l-2-5Z' fill='%237dffea'/%3E%3C/svg%3E" />
-<title>Ace of Dawn — WW2 Dogfight</title>
-  <script type="module" crossorigin src="./assets/index-uHKkOvtf.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-C7VJXvEt.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Crimson Dawn — 紅の暁</title>
+<meta name="description" content="A Ghibli-flavoured aerial dogfight rendered in real time with Three.js: two propeller fighters duel beneath a red dawn, trailing white smoke from every wingtip." />
+<meta name="theme-color" content="#1a1020" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='72%25' r='75%25'%3E%3Cstop offset='0' stop-color='%23ffe6b0'/%3E%3Cstop offset='.45' stop-color='%23f2683d'/%3E%3Cstop offset='1' stop-color='%232b1d40'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='12' fill='url(%23g)'/%3E%3Cpath d='M32 20l3 9 15 3-15 3-3 9-3-9-15-3 15-3z' fill='%23fff3d6' opacity='.92'/%3E%3C/svg%3E" />
+  <script type="module" crossorigin src="./assets/index-D8KUxorD.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-B66Q4G1R.css">
 </head>
 <body>
-  <div id="app"></div>
+  <canvas id="scene"></canvas>
 
-  <div id="boot-note">LOADING THEATER…</div>
-
-  <div id="hud" class="hidden">
-    <svg id="hud-svg"></svg>
-    <div id="health-wrap" class="panel">
-      <div class="gauge-label">AIRFRAME</div>
-      <div id="hp-bar-bg"><div id="hp-bar"></div></div>
+  <!-- film HUD, sits inside the 2.39:1 matte -->
+  <div id="hud">
+    <div id="slate">
+      <div id="slate-shot">000 · —</div>
+      <div id="slate-info">00:00:00</div>
     </div>
-    <div id="fl-top" class="panel">
-      <div id="enemies-left">BANDITS <b>8</b></div>
-      <div id="score-top">SCORE 0</div>
-    </div>
-    <div id="fl-left" class="panel">
-      <div class="gauge-label">AIRSPEED</div>
-      <div><span id="spd" class="gauge-val">0</span> <span class="gauge-unit">KM/H</span></div>
-      <div class="gauge-label" style="margin-top:6px">ALTITUDE</div>
-      <div><span id="alt" class="gauge-val" style="font-size:22px">0</span> <span class="gauge-unit">M</span></div>
-      <div class="gauge-label" style="margin-top:8px">THROTTLE</div>
-      <div id="throttle-wrap"><div id="throttle-bar"></div></div>
-    </div>
-    <div id="fl-right" class="panel">
-      <div class="gauge-label">ARMAMENT</div>
-      <div id="wpn-cannon" class="wpn">20MM CANNON <b id="ammo-cannon">120</b></div>
-      <div id="wpn-mg" class="wpn active">.50 MG <b id="ammo-mg">1600</b></div>
-    </div>
-    <div id="killfeed" class="panel"></div>
-    <div id="msg" class="panel"></div>
-
-    <div id="touch-controls" role="group" aria-label="Touch flight controls">
-      <div class="touch-utility" role="group" aria-label="View and game controls">
-        <button type="button" class="touch-btn touch-utility-btn" data-control="camera" data-touch-action="camera" aria-label="Switch camera" aria-pressed="false">CAM</button>
-        <button type="button" class="touch-btn touch-utility-btn" data-control="pause" data-touch-action="pause" aria-label="Pause or resume" aria-pressed="false"><span aria-hidden="true">Ⅱ</span></button>
-      </div>
-
-      <div class="touch-flight-pad" role="group" aria-label="Flight direction">
-        <button type="button" class="touch-btn touch-pitch-up" data-control="pitch-up" data-touch-key="s" aria-label="Pitch up"><span aria-hidden="true">▲</span></button>
-        <button type="button" class="touch-btn touch-roll-left" data-control="roll-left" data-touch-key="a" aria-label="Roll left"><span aria-hidden="true">◀</span></button>
-        <button type="button" class="touch-btn touch-roll-right" data-control="roll-right" data-touch-key="d" aria-label="Roll right"><span aria-hidden="true">▶</span></button>
-        <button type="button" class="touch-btn touch-pitch-down" data-control="pitch-down" data-touch-key="w" aria-label="Pitch down"><span aria-hidden="true">▼</span></button>
-      </div>
-
-      <div class="touch-combat" role="group" aria-label="Weapons and throttle">
-        <button type="button" class="touch-btn touch-fire touch-fire-mg" data-control="fire-mg" data-touch-action="fire-mg" aria-label="Fire machine guns">MG</button>
-        <button type="button" class="touch-btn touch-fire touch-fire-cannon" data-control="fire-cannon" data-touch-action="fire-cannon" aria-label="Fire cannon">20</button>
-        <button type="button" class="touch-btn touch-throttle" data-control="throttle-down" data-touch-key="control" aria-label="Decrease throttle"><span aria-hidden="true">−</span></button>
-        <button type="button" class="touch-btn touch-throttle" data-control="throttle-up" data-touch-key="shift" aria-label="Increase throttle"><span aria-hidden="true">+</span></button>
-      </div>
+    <div id="phase">THE MERGE</div>
+    <button id="mute" type="button">SOUND ON</button>
+    <div id="keys">
+      <span><b>SPACE</b> cut</span>
+      <span><b>F</b> free camera</span>
+      <span><b>M</b> sound</span>
+      <span><b>H</b> hide overlay</span>
     </div>
   </div>
 
-  <div id="vignette"></div>
-  <div id="hitmark">✕</div>
-
-  <!-- Start -->
-  <div id="start" class="overlay hidden">
+  <!-- title card -->
+  <div id="overlay">
     <div class="card">
-      <div class="title">ACE&nbsp;OF&nbsp;DAWN</div>
-      <div class="subtitle">WW2 DOGFIGHT · 8 BANDITS INBOUND</div>
-      <div class="ctrls">
-        <div><span class="k">W / S</span> Pitch (dive / climb)</div>
-        <div><span class="k">A / D</span> Roll left / right</div>
-        <div><span class="k">Q / E</span> Yaw rudder</div>
-        <div><span class="k">Shift / Ctrl</span> Throttle up / down</div>
-        <div><span class="k">SPACE / LMB</span> Fire .50 machine guns</div>
-        <div><span class="k">F / RMB</span> Fire 20mm cannon</div>
-        <div><span class="k">V</span> Cockpit / chase camera</div>
-        <div><span class="k">P / ESC</span> Pause</div>
-      </div>
-      <div class="hint">Lead your target — tracers and bandits both obey gravity and momentum.<br>Pull throttle in a dive, watch your energy, and don't fly into the deck.</div>
-      <button class="btn" id="start-btn">SCRAMBLE</button>
+      <div class="kanji">紅 の 暁</div>
+      <h1>CRIMSON DAWN</h1>
+      <p class="tag">Two propeller fighters. One red morning above the cloud sea.</p>
+      <button id="begin" type="button"><span>▶</span> ROLL CAMERA</button>
+      <p class="hint">headphones recommended · click anywhere to begin</p>
     </div>
+    <div class="vign"></div>
   </div>
 
-  <!-- End -->
-  <div id="end" class="overlay hidden">
-    <div class="card">
-      <div class="title" id="end-title">VICTORY</div>
-      <div class="subtitle" id="end-sub">SKIES SECURED</div>
-      <div id="end-stats"></div>
-      <button class="btn" id="restart-btn">FLY AGAIN</button>
-    </div>
-  </div>
-
+  <noscript><p style="color:#fff;font:16px system-ui;padding:2rem">This scene needs JavaScript and WebGL2.</p></noscript>
 </body>
 </html>
