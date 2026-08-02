@@ -67268,6 +67268,7 @@ var App = class {
     this._resize();
     window.addEventListener("resize", () => this._resize());
     this._animate();
+    this._autoStart();
   }
   _initLights() {
     this.scene.add(new AmbientLight(16777215, 1.6));
@@ -67408,6 +67409,36 @@ var App = class {
     this.tgeo = null;
     this._refreshTokenUI();
     this._showTokenPanel("\u5DF2\u6E05\u9664\u672C\u673A\u4FDD\u5B58\u7684 Token\u3002");
+  }
+  // Ask Mapbox whether a token is actually usable.
+  // -> true (valid) | false (rejected) | null (check itself failed).
+  async _verifyToken(token) {
+    try {
+      const url = "https://api.mapbox.com/tokens/v2?access_token=" + encodeURIComponent(token);
+      const res = await fetch(url);
+      if (res.status === 401 || res.status === 403) return false;
+      return res.ok ? true : null;
+    } catch (_) {
+      return null;
+    }
+  }
+  // On startup, build the default view (Grand Canyon @ zoom 12, from the
+  // form defaults) so the viewer isn't empty — but only with a token that
+  // Mapbox accepts, otherwise the page would just fire a wall of 401s.
+  async _autoStart() {
+    if (!this.token || !this.tgeo) return;
+    this.setStatus("\u6B63\u5728\u6821\u9A8C Mapbox Token\u2026", true);
+    const ok = await this._verifyToken(this.token);
+    if (ok === false) {
+      this.setStatus("\u2717 Mapbox Token \u65E0\u6548\u6216\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u586B\u5199\u540E\u518D\u751F\u6210\u3002");
+      this._showTokenPanel("Token \u65E0\u6548\u6216\u5DF2\u8FC7\u671F\uFF08Mapbox \u62D2\u7EDD\u4E86\u8BE5 Token\uFF09\u3002");
+      return;
+    }
+    if (ok === null) {
+      this.setStatus("\u672A\u80FD\u6821\u9A8C Mapbox Token\uFF08\u7F51\u7EDC\u5F02\u5E38\uFF09\uFF0C\u672A\u81EA\u52A8\u751F\u6210\u3002\u53EF\u70B9\u300C\u751F\u6210\u4E09\u7EF4\u5185\u5BB9\u300D\u91CD\u8BD5\u3002");
+      return;
+    }
+    await this.build();
   }
   // Estimate tile count + download volume from current inputs (exact tile
   // counts, approximate bytes). Shown before the user commits to building.
