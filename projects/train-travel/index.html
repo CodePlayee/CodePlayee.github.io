@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Train Travel</title>
+  <script type="module" crossorigin src="./assets/index-UGWu10E2.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DJt6G4Dv.css">
+</head>
+<body>
+  <div id="loading">Loading...</div>
+  <div id="hud">
+    <div class="speed" id="speedDisplay">0 km/h</div>
+    <div id="timeDisplay"></div>
+    <div class="controls">W/S or &uarr;/&darr;: Speed &nbsp; C: Camera &nbsp; Mouse: Look &nbsp; H: Horn &nbsp; M: Mute &nbsp; G: debug wireframe</div>
+  </div>
+  <div id="debugPanel">
+    <div class="title">Debug</div>
+    <div class="row">
+      <label for="timeSlider">Time</label>
+      <span id="debugTimeLabel">06:00</span>
+    </div>
+    <input type="range" id="timeSlider" min="0" max="1" step="0.001" value="0.25">
+    <div class="row presets">
+      <button data-time="0">Night</button>
+      <button data-time="0.25">Dawn</button>
+      <button data-time="0.5">Noon</button>
+      <button data-time="0.75">Dusk</button>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="pauseTime"> Pause auto cycle</label>
+    </div>
+    <div class="section">Headlight</div>
+    <div class="row"><label for="headlightIntensity">Intensity</label><span id="headlightIntensityLabel">200</span></div>
+    <input type="range" id="headlightIntensity" min="0" max="500" step="1" value="200">
+    <div class="row"><label for="headlightEmissive">Bulb glow</label><span id="headlightEmissiveLabel">4.0</span></div>
+    <input type="range" id="headlightEmissive" min="0" max="10" step="0.1" value="4.0">
+    <div class="row"><label for="headlightAngle">Half-angle (&deg;)</label><span id="headlightAngleLabel">15</span></div>
+    <input type="range" id="headlightAngle" min="2" max="60" step="1" value="15">
+    <div class="row"><label for="headlightPenumbra">Penumbra</label><span id="headlightPenumbraLabel">0.35</span></div>
+    <input type="range" id="headlightPenumbra" min="0" max="1" step="0.01" value="0.35">
+    <div class="row"><label for="headlightDistance">Distance (m)</label><span id="headlightDistanceLabel">150</span></div>
+    <input type="range" id="headlightDistance" min="20" max="500" step="5" value="150">
+  </div>
+</body>
+</html>

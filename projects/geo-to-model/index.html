@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>三维地形生成器 · three-geo</title>
+    <link rel="stylesheet" href="./dist/app.bundle.css" />
+    <style>
+        :root {
+            --bg: #0b0f14; --panel: #131a22; --panel2: #1b242e;
+            --line: #263340; --text: #d6e2ee; --muted: #8aa0b4;
+            --accent: #3b9dff; --ok: #4ad295; --err: #ff7a7a;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; height: 100%; }
+        body {
+            font: 14px/1.5 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg); color: var(--text); overflow: hidden;
+            display: flex;
+        }
+        #sidebar {
+            width: 320px; flex: 0 0 320px; height: 100vh; overflow-y: auto;
+            background: var(--panel); border-right: 1px solid var(--line);
+            padding: 18px 16px; display: flex; flex-direction: column; gap: 16px;
+        }
+        h1 { font-size: 16px; margin: 0 0 2px; letter-spacing: .5px; }
+        h1 small { color: var(--muted); font-weight: normal; font-size: 11px; }
+        .field { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 12px; color: var(--muted); }
+        input[type=text], input[type=number], select {
+            background: var(--panel2); border: 1px solid var(--line); color: var(--text);
+            border-radius: 7px; padding: 8px 10px; font-size: 13px; width: 100%;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
+        .row { display: flex; gap: 8px; }
+        .row > .field { flex: 1; }
+        .hint { font-size: 11px; min-height: 14px; }
+        .hint.ok { color: var(--ok); }
+        .hint.info { color: var(--accent); line-height: 1.4; }
+        .warnings {
+            font-size: 12px; background: rgba(255, 180, 60, .08);
+            border: 1px solid #6b5320; border-radius: 7px; padding: 9px 10px;
+            color: #ffd591;
+        }
+        .warn-title { font-weight: 600; margin-bottom: 4px; color: #ffc04d; }
+        .warn-item { line-height: 1.5; }
+        .estimate {
+            display: flex; flex-direction: column; gap: 2px;
+            font-size: 12px; background: var(--panel2);
+            border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px;
+        }
+        .est-vol { color: var(--accent); font-weight: 600; }
+        .est-tiles { color: var(--muted); font-size: 11px; }
+        .progress { display: flex; flex-direction: column; gap: 4px; }
+        .progress-track {
+            height: 8px; background: var(--panel2); border: 1px solid var(--line);
+            border-radius: 6px; overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%; width: 0%; background: linear-gradient(90deg, #2b6fb3, var(--accent));
+            transition: width .2s ease;
+        }
+        .progress-label { font-size: 11px; color: var(--muted); }
+        .export-size { font-size: 12px; color: var(--muted); min-height: 16px; margin-top: -4px; }
+        .hint.err { color: var(--muted); }
+        .features { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .chk {
+            display: flex; align-items: center; gap: 8px; padding: 9px 10px;
+            background: var(--panel2); border: 1px solid var(--line); border-radius: 7px;
+            cursor: pointer; user-select: none; font-size: 13px;
+        }
+        .chk input { accent-color: var(--accent); width: 15px; height: 15px; }
+        .chk.on { border-color: var(--accent); }
+        button {
+            background: var(--accent); color: #04101d; border: none; font-weight: 600;
+            border-radius: 8px; padding: 11px; font-size: 14px; cursor: pointer; width: 100%;
+        }
+        button.secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
+        button:disabled { opacity: .5; cursor: not-allowed; }
+        .divider { height: 1px; background: var(--line); margin: 2px 0; }
+        .group-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+        #status {
+            font-size: 12px; color: var(--text); background: var(--panel2);
+            border: 1px solid var(--line); border-radius: 7px; padding: 9px 10px;
+            min-height: 36px; word-break: break-all;
+        }
+        .spinner {
+            display: none; width: 12px; height: 12px; border: 2px solid var(--muted);
+            border-top-color: var(--accent); border-radius: 50%; margin-right: 6px;
+            animation: spin .7s linear infinite; vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #stage { flex: 1; position: relative; height: 100vh; }
+        #viewer { width: 100%; height: 100%; display: block; }
+        .examples { font-size: 11px; color: var(--muted); }
+        .examples a { color: var(--accent); cursor: pointer; text-decoration: none; margin-right: 8px; }
+        .footer { margin-top: auto; font-size: 11px; color: var(--muted); }
+
+        .map-btn { padding: 8px; font-size: 12px; }
+
+        .token-panel {
+            display: flex; flex-direction: column; gap: 7px;
+            background: var(--panel2); border: 1px solid var(--accent);
+            border-radius: 9px; padding: 12px;
+        }
+        .token-panel label { color: var(--text); font-weight: 600; }
+        .token-help { font-size: 11px; color: var(--muted); line-height: 1.5; }
+        .token-help a { color: var(--accent); }
+        .token-set {
+            display: flex; align-items: center; gap: 8px; font-size: 11px;
+            color: var(--muted); padding: 2px 2px;
+        }
+        .token-set-label { flex: 1; word-break: break-all; }
+        .link-btn {
+            width: auto; background: none; border: none; color: var(--accent);
+            font-size: 11px; padding: 2px 4px; cursor: pointer; font-weight: 600;
+        }
+
+        /* region picker modal */
+        .modal {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(4, 8, 12, .66); backdrop-filter: blur(2px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-card {
+            width: min(920px, 94vw); height: min(760px, 92vh);
+            background: var(--panel); border: 1px solid var(--line);
+            border-radius: 12px; display: flex; flex-direction: column;
+            overflow: hidden; box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+        }
+        .modal-head {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 14px; border-bottom: 1px solid var(--line);
+        }
+        .modal-head strong { font-size: 14px; }
+        .modal-sub { color: var(--muted); font-size: 11px; }
+        .modal-x {
+            margin-left: auto; width: 28px; height: 28px; padding: 0; flex: 0 0 28px;
+            background: var(--panel2); color: var(--muted); border: 1px solid var(--line);
+            border-radius: 6px; font-size: 13px;
+        }
+        .modal-toolbar {
+            display: flex; gap: 8px; padding: 10px 14px; flex-wrap: wrap;
+            border-bottom: 1px solid var(--line); align-items: center;
+            /* sit above the Leaflet map so the search dropdown isn't covered */
+            position: relative; z-index: 1200;
+        }
+        .modal-toolbar select { width: auto; flex: 1 1 120px; min-width: 100px; font-size: 12px; padding: 7px 8px; }
+        .map-search-wrap { position: relative; flex: 2 1 240px; min-width: 200px; }
+        .map-search-wrap input { width: 100%; font-size: 12px; padding: 7px 9px; }
+        .map-search-list {
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 1300; margin-top: 3px;
+            background: var(--panel2); border: 1px solid var(--line); border-radius: 7px;
+            max-height: 260px; overflow-y: auto; box-shadow: 0 10px 24px rgba(0, 0, 0, .4);
+        }
+        .ms-item {
+            padding: 7px 10px; font-size: 13px; cursor: pointer;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .ms-item:hover { background: rgba(59, 157, 255, .14); }
+        .ms-lv { color: var(--muted); font-size: 11px; margin-left: 8px; }
+        .ms-empty { padding: 8px 10px; font-size: 12px; color: var(--muted); }
+        .map-canvas { flex: 1; min-height: 200px; background: #0a0e13; }
+        .modal-foot {
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            padding: 10px 14px; border-top: 1px solid var(--line);
+        }
+        .map-picked { font-size: 12px; color: var(--ok); flex: 1 1 auto; }
+        .map-hint { font-size: 12px; color: var(--muted); }
+        .modal-actions { display: flex; gap: 8px; margin-left: auto; }
+        .modal-actions button { width: auto; padding: 9px 16px; font-size: 13px; }
+        /* Leaflet renders dark-on-light; keep its controls readable on dark UI */
+        .leaflet-container { background: #0a0e13; font: inherit; }
+        .leaflet-bar a, .leaflet-draw-toolbar a { color: #222 !important; }
+    </style>
+</head>
+<body>
+    <aside id="sidebar">
+        <div>
+            <h1>三维地形生成器<br><small>three-geo · Mapbox · three r176</small></h1>
+        </div>
+
+        <!-- Mapbox token: entered by the user, stored in localStorage. -->
+        <div id="token-panel" class="token-panel" style="display:none">
+            <label>Mapbox Access Token</label>
+            <input id="token-input" type="text" autocomplete="off" spellcheck="false"
+                   placeholder="粘贴你的 pk. 开头的 Token" />
+            <div class="token-help">
+                需要一个 Mapbox 公开 Token（pk. 开头）。前往
+                <a href="https://account.mapbox.com/access-tokens/" target="_blank" rel="noopener">account.mapbox.com</a>
+                免费获取。Token 仅保存在本机浏览器，不会上传。
+            </div>
+            <div id="token-msg" class="hint err"></div>
+            <button id="btn-token-save" type="button">保存 Token</button>
+        </div>
+        <div id="token-set" class="token-set" style="display:none">
+            <span id="token-set-label" class="token-set-label"></span>
+            <button id="btn-token-change" type="button" class="link-btn">更换</button>
+        </div>
+
+        <div class="field">
+            <label>中心点坐标（支持多种格式）</label>
+            <input id="coords" type="text" value="46.5763, 7.9904"
+                   placeholder="如 46.5763, 7.9904 或 46°34&#39;34&quot;N 7°59&#39;25&quot;E" />
+            <button id="btn-map" type="button" class="secondary map-btn">🗺 在地图上选择区域（中国）</button>
+            <div id="region-tag" class="hint info" style="display:none"></div>
+            <div id="coord-preview" class="hint"></div>
+            <div class="examples">
+                示例:
+                <a data-c="36.2058, -112.4413">大峡谷</a>
+                <a data-c="35.3606, 138.7274">富士山</a>
+                <a data-c="27.9881, 86.9250">珠峰</a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="field">
+                <label>范围半径 (km)</label>
+                <input id="radius" type="number" value="3" min="0.5" max="20" step="0.5" />
+            </div>
+            <div class="field">
+                <label>缩放级别 (11–17)</label>
+                <input id="zoom" type="number" value="13" min="11" max="17" step="1" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label>要素</label>
+            <div class="features">
+                <label class="chk on"><input id="f-terrain" type="checkbox" checked> 地形</label>
+                <label class="chk"><input id="f-water" type="checkbox"> 水系</label>
+                <label class="chk"><input id="f-road" type="checkbox"> 道路</label>
+                <label class="chk"><input id="f-building" type="checkbox"> 建筑</label>
+            </div>
+            <div id="feature-hint" class="hint info" style="display:none"></div>
+        </div>
+
+        <label id="clip-row" class="chk" style="display:none"><input id="f-clip" type="checkbox" checked> 裁剪到所选区域边界</label>
+
+        <div id="estimate" class="estimate" style="display:none"></div>
+
+        <button id="btn-build"><span id="spinner" class="spinner"></span>生成三维内容</button>
+        <div id="progress" class="progress" style="display:none">
+            <div id="progress-track" class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+            <div id="progress-label" class="progress-label"></div>
+        </div>
+        <div id="status">就绪。输入坐标并点击生成。</div>
+        <div id="warnings" class="warnings" style="display:none"></div>
+
+        <div class="divider"></div>
+        <div class="group-title">导出 3D 模型</div>
+        <div class="row">
+            <div class="field" style="flex:1.4">
+                <label>文件名</label>
+                <input id="export-name" type="text" value="terrain" />
+            </div>
+            <div class="field">
+                <label>格式</label>
+                <select id="export-format">
+                    <option value="glb">GLB</option>
+                    <option value="gltf">glTF</option>
+                    <option value="obj">OBJ</option>
+                    <option value="stl">STL</option>
+                    <option value="fbx">FBX</option>
+                </select>
+            </div>
+        </div>
+        <button id="btn-export" class="secondary" disabled>导出模型</button>
+        <div id="export-size" class="export-size"></div>
+
+        <div class="footer">
+            鼠标左键旋转 · 右键平移 · 滚轮缩放<br>
+            FBX 为 ASCII 几何（含顶点色，不含卫星贴图）
+        </div>
+    </aside>
+
+    <main id="stage">
+        <canvas id="viewer"></canvas>
+    </main>
+
+    <!-- Region picker modal (China). Populated/controlled by src/map.js. -->
+    <div id="map-modal" class="modal" style="display:none">
+        <div class="modal-card">
+            <div class="modal-head">
+                <strong>选择区域</strong>
+                <span class="modal-sub">搜索或下拉选择行政区，或在地图上手绘多边形</span>
+                <button id="map-close" class="modal-x" type="button">✕</button>
+            </div>
+            <div class="modal-toolbar">
+                <div class="map-search-wrap">
+                    <input id="map-search" type="text" autocomplete="off"
+                           placeholder="搜索省/市/区县（中文或拼音，如 杭州 / hangzhou / hz）" />
+                    <div id="map-search-list" class="map-search-list" style="display:none"></div>
+                </div>
+                <select id="map-prov" disabled><option value="">选择省 / 直辖市</option></select>
+                <select id="map-city" disabled><option value="">市</option></select>
+                <select id="map-dist" disabled><option value="">区县</option></select>
+            </div>
+            <div id="map-canvas" class="map-canvas"></div>
+            <div class="modal-foot">
+                <div id="map-picked" class="map-picked"></div>
+                <div id="map-hint" class="map-hint"></div>
+                <div class="modal-actions">
+                    <button id="map-cancel" class="secondary" type="button">取消</button>
+                    <button id="map-confirm" type="button" disabled>确定使用此区域</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // checkbox active styling + example shortcuts
+        document.querySelectorAll('.chk input').forEach((c) => {
+            const sync = () => c.closest('.chk').classList.toggle('on', c.checked);
+            c.addEventListener('change', sync); sync();
+        });
+        document.querySelectorAll('.examples a').forEach((a) => {
+            a.addEventListener('click', () => {
+                const i = document.getElementById('coords');
+                i.value = a.dataset.c;
+                i.dispatchEvent(new Event('input'));
+            });
+        });
+    </script>
+    <script type="module" src="./dist/app.bundle.js"></script>
+</body>
+</html>

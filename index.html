@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CodePlayee · Interactive Works</title>
+    <meta
+      name="description"
+      content="CodePlayee 的 Web3D、地理建模与交互游戏作品展示。"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="CodePlayee home">
+        <span class="brand-mark" aria-hidden="true">CP</span>
+        <span>CodePlayee</span>
+      </a>
+      <nav class="site-nav" aria-label="作品导航">
+        <a href="#works">作品</a>
+        <a href="https://github.com/CodePlayee" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Selected interactive works</p>
+          <h1 id="page-title">CodePlayee 互动作品集</h1>
+          <p class="intro">
+            汇总 Web3D 飞行、程序化铁路、三维地形建模与空战游戏。每张卡片展示真实运行截图，点击即可进入对应动态演示。
+          </p>
+        </div>
+        <div class="hero-meta" aria-label="作品概览">
+          <span>4 个项目</span>
+          <span>Three.js / Vite</span>
+          <span>GitHub Pages 静态部署</span>
+        </div>
+      </section>
+
+      <section id="works" class="works" aria-label="作品列表">
+        <article class="work-card featured">
+          <a class="shot-link" href="./projects/fly-sim/" aria-label="打开 flySim 动态演示">
+            <img src="./assets/screens/fly-sim.png" alt="flySim 航班计划与模拟飞行界面截图" />
+          </a>
+          <div class="work-body">
+            <div class="work-topline">
+              <span class="type">Web3D Simulation</span>
+              <span class="status">Live demo</span>
+            </div>
+            <h2>flySim</h2>
+            <p>
+              免费全球地形模拟飞行：真实机场航线、卫星影像、地形 LOD、昼夜光照和城市灯网共同构成可飞行的三维世界。
+            </p>
+            <div class="tags" aria-label="技术标签">
+              <span>Three.js</span>
+              <span>geo-three</span>
+              <span>Terrarium DEM</span>
+              <span>SunCalc</span>
+            </div>
+            <div class="actions">
+              <a class="primary-action" href="./projects/fly-sim/">
+                打开动态演示
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+              </a>
+              <a class="secondary-action" href="https://github.com/CodePlayee/fly-sim" target="_blank" rel="noopener">查看仓库</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="work-card wide">
+          <a class="shot-link" href="./projects/geo-to-model/" aria-label="打开 geo-to-model 动态演示">
+            <img src="./assets/screens/geo-to-model.png" alt="geo-to-model 三维地形生成器界面截图" />
+          </a>
+          <div class="work-body">
+            <div class="work-topline">
+              <span class="type">Geo Modeling</span>
+              <span class="status">Interactive tool</span>
+            </div>
+            <h2>geo-to-model</h2>
+            <p>
+              输入坐标或框选区域，生成带卫星贴图、水系、道路和建筑的三维地形，并导出 GLB、OBJ、STL 等模型格式。
+            </p>
+            <div class="tags" aria-label="技术标签">
+              <span>three-geo</span>
+              <span>Mapbox</span>
+              <span>Leaflet</span>
+              <span>3D Export</span>
+            </div>
+            <div class="actions">
+              <a class="primary-action" href="./projects/geo-to-model/">
+                打开动态演示
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+              </a>
+              <a class="secondary-action" href="https://github.com/CodePlayee/geo-to-model" target="_blank" rel="noopener">查看仓库</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="work-card">
+          <a class="shot-link" href="./projects/train-travel/" aria-label="打开 train-travel 动态演示">
+            <img src="./assets/screens/train-travel.png" alt="train-travel 程序化铁路与山地场景截图" />
+          </a>
+          <div class="work-body">
+            <div class="work-topline">
+              <span class="type">Procedural World</span>
+              <span class="status">Live demo</span>
+            </div>
+            <h2>train-travel</h2>
+            <p>
+              地形优先的无限火车漫游：路线规划器沿地形代价图选线，开放区高架通过，连续山地生成隧道。
+            </p>
+            <div class="tags" aria-label="技术标签">
+              <span>TypeScript</span>
+              <span>Three.js</span>
+              <span>Terrain LOD</span>
+              <span>Route Planner</span>
+            </div>
+            <div class="actions">
+              <a class="primary-action" href="./projects/train-travel/">
+                打开动态演示
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+              </a>
+              <a class="secondary-action" href="https://github.com/CodePlayee/train-travel" target="_blank" rel="noopener">查看仓库</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="work-card">
+          <a class="shot-link" href="./projects/dog-fight/" aria-label="打开 dog-fight 动态演示">
+            <img src="./assets/screens/dog-fight.png" alt="Ace of Dawn 空战游戏启动界面截图" />
+          </a>
+          <div class="work-body">
+            <div class="work-topline">
+              <span class="type">Web Game</span>
+              <span class="status">Playable</span>
+            </div>
+            <h2>Ace of Dawn</h2>
+            <p>
+              单页 WW2 空战游戏：程序化战机、街机飞行动力学、敌机 AI、弹道系统、HUD 和触屏控制全部在浏览器运行。
+            </p>
+            <div class="tags" aria-label="技术标签">
+              <span>Three.js</span>
+              <span>Game Loop</span>
+              <span>Ballistics</span>
+              <span>WebAudio</span>
+            </div>
+            <div class="actions">
+              <a class="primary-action" href="./projects/dog-fight/">
+                打开动态演示
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+              </a>
+              <a class="secondary-action" href="https://github.com/CodePlayee/dog-fight" target="_blank" rel="noopener">查看仓库</a>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Built from CodePlayee repositories.</span>
+      <a href="https://github.com/CodePlayee/CodePlayee.github.io" target="_blank" rel="noopener">CodePlayee.github.io</a>
+    </footer>
+  </body>
+</html>
