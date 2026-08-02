@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Projection · Gothic Cathedral</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #05060a;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #cbd5e1; user-select: none; }
+    #c { display: block; position: fixed; inset: 0; width: 100vw; height: 100vh; cursor: grab; }
+    #c:active { cursor: grabbing; }
+    #hud { position: fixed; top: 12px; left: 12px; z-index: 10;
+      background: rgba(8, 12, 22, 0.62); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(99, 102, 241, 0.28); border-radius: 10px; padding: 10px 14px;
+      font-size: 12px; line-height: 1.6; pointer-events: none; min-width: 240px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45); }
+    #hud .title { font-weight: 600; letter-spacing: 0.5px; color: #e0e7ff;
+      margin-bottom: 6px; font-size: 13px; }
+    #hud .row { display: flex; justify-content: space-between; gap: 14px; }
+    #hud .k { color: #94a3b8; }
+    #hud .v { color: #c7d2fe; font-variant-numeric: tabular-nums; }
+    #hud .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px;
+      vertical-align: middle; box-shadow: 0 0 6px currentColor; }
+    #legend { position: fixed; bottom: 12px; left: 12px; z-index: 10;
+      background: rgba(8, 12, 22, 0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(99, 102, 241, 0.22); border-radius: 10px; padding: 10px 14px;
+      font-size: 11px; line-height: 1.7; pointer-events: none; max-width: 320px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4); color: #94a3b8; }
+    #legend .hd { color: #c7d2fe; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.4px; }
+    #legend b { color: #f0abfc; font-weight: 500; }
+    .dg.main.a { margin-right: 12px !important; margin-top: 12px !important; }
+    .dg.main .close-button { background: rgba(99, 102, 241, 0.18) !important; border-top: 1px solid rgba(99, 102, 241, 0.25) !important; color: #c7d2fe !important; }
+    .dg.main { text-shadow: none !important; }
+    #loader { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #05060a; color: #c7d2fe; font-size: 14px; letter-spacing: 1px;
+      transition: opacity 0.6s ease; gap: 14px; }
+    #loader.hide { opacity: 0; pointer-events: none; }
+    .spinner { width: 36px; height: 36px; border: 2px solid rgba(199, 210, 254, 0.18); border-top-color: #c7d2fe; border-radius: 50%; animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <video id="v" style="display:none" crossorigin="anonymous"
+         muted autoplay loop playsinline preload="auto"
+         src="./sintel_trailer-480p.mp4"></video>
+
+  <div id="hud">
+    <div class="title">🎬 Video Projection Mapping</div>
+    <div class="row"><span class="k"><span class="dot" style="color:#22c55e;background:#22c55e;"></span>FPS</span><span class="v" id="fps">--</span></div>
+    <div class="row"><span class="k"><span class="dot" style="color:#38bdf8;background:#38bdf8;"></span>Video</span><span class="v" id="vidstat">loading…</span></div>
+    <div class="row"><span class="k"><span class="dot" style="color:#f472b6;background:#f472b6;"></span>Projector</span><span class="v" id="projpos">--</span></div>
+    <div class="row"><span class="k"><span class="dot" style="color:#a78bfa;background:#a78bfa;"></span>Building</span><span class="v" id="bsize">--</span></div>
+  </div>
+
+  <div id="legend">
+    <div class="hd">Controls</div>
+    <div><b>Drag</b> orbit · <b>Scroll</b> zoom</div>
+    <div>Right panel: projector fov / position / intensity</div>
+    <div>Projection plane auto-fits the cathedral front face</div>
+  </div>
+
+  <div id="loader"><div class="spinner"></div><div>Loading cathedral…</div></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+  /* =========================================================
+   *  Renderer / scene / main camera
+   * ========================================================= */
+  const canvas = document.getElementById('c');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x040611);
+  scene.fog = new THREE.FogExp2(0x0a1530, 0.012);
+
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 2000);
+  camera.position.set(28, 18, 40);
+  camera.lookAt(0, 10, 0);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(0, 10, 0);
+  controls.minDistance = 6;
+  controls.maxDistance = 200;
+  controls.maxPolarAngle = Math.PI * 0.495;
+
+  /* =========================================================
+   *  Lights — night, ambient 0.25 + soft moon + 4 facade spots
+   * ========================================================= */
+  const ambient = new THREE.AmbientLight(0x8fa6cf, 0.25);  // <-- requested 0.25 intensity
+  const moon = new THREE.DirectionalLight(0xb8c8e8, 0.30); // softened so spots can dominate
+  moon.position.set(40, 60, 25);
+  moon.castShadow = true;
+  moon.shadow.mapSize.set(2048, 2048);
+  moon.shadow.camera.near = 0.5;
+  moon.shadow.camera.far = 200;
+  moon.shadow.camera.left = -40;
+  moon.shadow.camera.right = 40;
+  moon.shadow.camera.top = 40;
+  moon.shadow.camera.bottom = -40;
+  moon.shadow.bias = -0.0005;
+  scene.add(ambient, moon);
+
+  // 4 facade spots will be added AFTER the GLB loads, because they need
+  // to be positioned based on the cathedral's actual bounding box.
+  const facadeSpots = [];  // { spot, target, dirLabel }
+
+  /* =========================================================
+   *  Ground (dark plane so projection edge looks clean)
+   * ========================================================= */
+  {
+    const groundGeo = new THREE.CircleGeometry(120, 64);
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1f2e, roughness: 0.95, metalness: 0.05
+    });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Subtle radial grid for spatial reference
+    const gridHelper = new THREE.PolarGridHelper(80, 16, 8, 64, 0x223155, 0x131a2a);
+    gridHelper.position.y = 0.01;
+    gridHelper.material.transparent = true;
+    gridHelper.material.opacity = 0.5;
+    scene.add(gridHelper);
+  }
+
+  /* =========================================================
+   *  Video texture — CanvasTexture wrapper + procedural fallback
+   *  (fallback stays ALWAYS active; real video blends on top)
+   * ========================================================= */
+  const TEX_SIZE = 512;
+  const videoEl = document.getElementById('v');
+  const vidCanvas = document.createElement('canvas');
+  vidCanvas.width = vidCanvas.height = TEX_SIZE;
+  const vidCtx = vidCanvas.getContext('2d');
+
+  const videoTex = new THREE.CanvasTexture(vidCanvas);
+  videoTex.colorSpace = THREE.SRGBColorSpace;
+  videoTex.minFilter = THREE.LinearFilter;
+  videoTex.magFilter = THREE.LinearFilter;
+  videoTex.wrapS = THREE.ClampToEdgeWrapping;
+  videoTex.wrapT = THREE.ClampToEdgeWrapping;
+
+  let videoReady = false;
+  let fbT = 0;
+
+  // ALWAYS draw fallback first (ensures wall is never black)
+  function drawFallback() {
+    fbT += 0.020;
+    vidCtx.fillStyle = '#080a18';
+    vidCtx.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+
+    // moving warm-cool gradient swirls
+    const cx = TEX_SIZE / 2, cy = TEX_SIZE / 2;
+    for (let k = 0; k < 3; k++) {
+      const hue = (fbT * 18 + k * 120) % 360;
+      const ang = fbT * (0.4 + k * 0.2) + k;
+      const ox = cx + Math.cos(ang) * 120;
+      const oy = cy + Math.sin(ang * 1.3) * 100;
+      const grd = vidCtx.createRadialGradient(ox, oy, 5, ox, oy, 220);
+      grd.addColorStop(0,   `hsla(${hue}, 95%, 65%, 0.85)`);
+      grd.addColorStop(0.4, `hsla(${(hue+30)%360}, 80%, 35%, 0.45)`);
+      grd.addColorStop(1,   `hsla(${hue}, 80%, 8%, 0)`);
+      vidCtx.fillStyle = grd;
+      vidCtx.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+    }
+
+    // sweeping bright streaks
+    vidCtx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 4; i++) {
+      const y = (fbT * 90 + i * 130) % TEX_SIZE;
+      const hue = (fbT * 30 + i * 80) % 360;
+      vidCtx.fillStyle = `hsla(${hue}, 100%, 75%, 0.45)`;
+      vidCtx.fillRect(0, y - 1.2, TEX_SIZE, 2.4);
+    }
+    // sparkles
+    for (let i = 0; i < 24; i++) {
+      const x = (fbT * 60 + i * 67) % TEX_SIZE;
+      const y = (fbT * 80 + i * 91) % TEX_SIZE;
+      const hue = (fbT * 25 + i * 31) % 360;
+      vidCtx.fillStyle = `hsla(${hue}, 100%, 85%, 0.7)`;
+      vidCtx.beginPath();
+      vidCtx.arc(x, y, 1.6 + Math.sin(fbT + i) * 1.2, 0, Math.PI * 2);
+      vidCtx.fill();
+    }
+    vidCtx.globalCompositeOperation = 'source-over';
+  }
+
+  function tickVideo() {
+    drawFallback();
+    // composite real video on top when ready
+    if (videoReady && videoEl.readyState >= videoEl.HAVE_CURRENT_DATA && videoEl.videoWidth > 0) {
+      const vw = videoEl.videoWidth, vh = videoEl.videoHeight;
+      const side = Math.min(vw, vh);
+      const sx = (vw - side) / 2, sy = (vh - side) / 2;
+      vidCtx.drawImage(videoEl, sx, sy, side, side, 0, 0, TEX_SIZE, TEX_SIZE);
+    }
+    videoTex.needsUpdate = true;
+  }
+
+  videoEl.addEventListener('playing', () => {
+    videoReady = true;
+    document.getElementById('vidstat').textContent = 'sintel playing';
+  });
+  videoEl.addEventListener('error', () => {
+    console.warn('[video] failed, using procedural fallback only');
+    document.getElementById('vidstat').textContent = 'fallback only';
+  });
+  // autoplay may already have fired 'playing' before this module ran, so the
+  // listener above would never see it; timeupdate catches that case.
+  videoEl.addEventListener('timeupdate', function onFirstFrame() {
+    if (videoEl.readyState >= videoEl.HAVE_CURRENT_DATA && videoEl.videoWidth > 0) {
+      videoEl.removeEventListener('timeupdate', onFirstFrame);
+      videoReady = true;
+      document.getElementById('vidstat').textContent = 'sintel playing';
+    }
+  });
+  setTimeout(() => {
+    if (videoEl.readyState < videoEl.HAVE_CURRENT_DATA) {
+      console.warn('[video] still loading; fallback continues');
+      document.getElementById('vidstat').textContent = videoReady ? 'sintel playing' : 'loading + fallback';
+    }
+  }, 5000);
+
+  /* =========================================================
+   *  Projector camera + CameraHelper + shared shader injection
+   * ========================================================= */
+  const projCamera = new THREE.PerspectiveCamera(40, 1, 0.1, 500);
+  projCamera.position.set(0, 14, 35);
+
+  const projHelper = new THREE.CameraHelper(projCamera);
+  projHelper.material.color.set(0xff66ff);
+  projHelper.material.transparent = true;
+  projHelper.material.opacity = 0.85;
+  projHelper.material.depthTest = false;
+  projHelper.renderOrder = 10;
+  scene.add(projHelper);
+
+  // shared state for the shader injection
+  const projectorUniforms = {
+    uTextureMatrix:   { value: new THREE.Matrix4() },
+    uVideoTexture:    { value: videoTex },
+    uProjCamPos:      { value: new THREE.Vector3() },
+    uIntensity:       { value: 1.0 },
+    uUseBackfaceCull: { value: true }
+  };
+
+  /**
+   * Inject projective video texturing into a (PBR) material.
+   * For each fragment, transform its world position into the projector
+   * camera's clip space, do perspective divide, then map NDC.xy ∈ [-1,1]
+   * to UV ∈ [0,1]. Sample the video texture and blend onto the
+   * already-shaded color. Backface cull via normal · projDir.
+   *
+   * Cache key MUST include a version suffix so changes to the injection
+   * are picked up by Three.js's program cache. See memory.
+   */
+  const PROJ_CACHE_KEY = 'projective_v2';  // bumped: switch from mix to additive
+
+  function injectProjector(material) {
+    if (!material || material.userData.__projInjected) return;
+    material.userData.__projInjected = true;
+
+    material.onBeforeCompile = (shader) => {
+      // share uniforms by reference (mutated each frame from main thread)
+      shader.uniforms.uTextureMatrix   = projectorUniforms.uTextureMatrix;
+      shader.uniforms.uVideoTexture    = projectorUniforms.uVideoTexture;
+      shader.uniforms.uProjCamPos      = projectorUniforms.uProjCamPos;
+      shader.uniforms.uIntensity       = projectorUniforms.uIntensity;
+      shader.uniforms.uUseBackfaceCull = projectorUniforms.uUseBackfaceCull;
+
+      // --- VERTEX ---
+      shader.vertexShader = shader.vertexShader
+        .replace(
+          '#include <common>',
+          /* glsl */`
+          #include <common>
+          varying vec3 vMyWorldPos;
+          varying vec3 vMyWorldNormal;
+          `
+        )
+        .replace(
+          '#include <worldpos_vertex>',
+          /* glsl */`
+          #include <worldpos_vertex>
+          vMyWorldPos    = (modelMatrix * vec4(transformed, 1.0)).xyz;
+          vMyWorldNormal = normalize(mat3(modelMatrix) * normal);
+          `
+        );
+
+      // --- FRAGMENT ---
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          '#include <common>',
+          /* glsl */`
+          #include <common>
+          varying vec3 vMyWorldPos;
+          varying vec3 vMyWorldNormal;
+          uniform mat4  uTextureMatrix;
+          uniform sampler2D uVideoTexture;
+          uniform vec3  uProjCamPos;
+          uniform float uIntensity;
+          uniform bool  uUseBackfaceCull;
+          `
+        )
+        .replace(
+          '#include <dithering_fragment>',
+          /* glsl */`
+          // ---- Project the fragment's world position into projector clip space ----
+          vec4 _cc  = uTextureMatrix * vec4(vMyWorldPos, 1.0);
+          vec3 _ndc = _cc.xyz / _cc.w;
+          vec2 _uv  = _ndc.xy * 0.5 + 0.5;                  // NDC [-1,1] -> UV [0,1]
+          bool _inUV = _uv.x > 0.001 && _uv.x < 0.999
+                    && _uv.y > 0.001 && _uv.y < 0.999;
+          bool _inZ  = _ndc.z > 0.0 && _ndc.z < 1.0;
+
+          vec3 _toCam   = normalize(uProjCamPos - vMyWorldPos);
+          bool _facing  = dot(normalize(vMyWorldNormal), _toCam) > 0.0;
+          bool _allowed = !uUseBackfaceCull || _facing;
+
+          if (_inUV && _inZ && _allowed && uIntensity > 0.0) {
+            vec3 _vid = texture2D(uVideoTexture, _uv).rgb;
+            // soft vignette toward projection edges so the image doesn't
+            // read as a hard "pasted sticker"
+            vec2 _d = abs(_uv - 0.5) * 2.0;
+            float _vig = 1.0 - smoothstep(0.75, 1.0, max(_d.x, _d.y)) * 0.25;
+            // very gentle scanline so the projected image reads as "light"
+            float _scan = 0.95 + 0.05 * sin(gl_FragCoord.y * 1.7);
+            // ADDITIVE blend: video energy stacks on top of the spot-lit
+            // surface, so the facade's own shadows / highlights READ
+            // THROUGH the projection (closer to a real projector). The
+            // 1.8x energy compensates for ACES tone-map compression.
+            vec3 _projCol = _vid * _vig * _scan * 1.8;
+            gl_FragColor.rgb += _projCol * uIntensity;
+          }
+
+          #include <dithering_fragment>
+          `
+        );
+
+      material.userData.shader = shader;
+    };
+
+    // Bump this version suffix any time you edit the injection above,
+    // otherwise Three.js will reuse the old compiled program.
+    material.customProgramCacheKey = () => PROJ_CACHE_KEY;
+  }
+
+  /* =========================================================
+   *  Load the cathedral
+   * ========================================================= */
+  let buildingSize = new THREE.Vector3(20, 20, 20);
+
+  const loader = new GLTFLoader();
+  loader.load(
+    './cathedral.glb',
+    (gltf) => {
+      const root = gltf.scene;
+
+      // Auto-normalize: glTF files are unitless, and many 3D models from
+      // tools like Tripo AI are authored in cm. A real cathedral should
+      // be tens of meters tall, so if the model comes in < 7.5m, scale it
+      // up to TARGET_HEIGHT. Then recenter on origin and sit it on the
+      // ground plane.
+      const TARGET_HEIGHT = 30;
+      const initBox = new THREE.Box3().setFromObject(root);
+      const initSize = new THREE.Vector3();
+      initBox.getSize(initSize);
+      if (initSize.y > 0 && initSize.y < TARGET_HEIGHT / 4) {
+        const s = TARGET_HEIGHT / initSize.y;
+        root.scale.multiplyScalar(s);
+        console.log(`[glb] sub-meter units detected, scaled by ${s.toFixed(2)}x`);
+      }
+
+      // Recompute bounding box (in world space, after scale)
+      const box = new THREE.Box3().setFromObject(root);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      buildingSize.copy(size);
+
+      root.position.x -= center.x;
+      root.position.z -= center.z;
+      root.position.y -= box.min.y;       // sit on ground
+      // also clear any rotation so +Z face stays the front
+      root.rotation.set(0, 0, 0);
+
+      // inject the projection shader into every Mesh material
+      root.traverse((obj) => {
+        if (obj.isMesh) {
+          obj.castShadow = true;
+          obj.receiveShadow = true;
+          const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+          mats.forEach(injectProjector);
+        }
+      });
+
+      scene.add(root);
+      frameProjectorOntoFront();
+      addFacadeSpots();
+      document.getElementById('bsize').textContent =
+        `${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)}`;
+
+      document.getElementById('loader').classList.add('hide');
+      setTimeout(() => document.getElementById('loader').remove(), 700);
+    },
+    (xhr) => {
+      if (xhr.total) {
+        const pct = (xhr.loaded / xhr.total * 100).toFixed(0);
+        document.querySelector('#loader div:last-child').textContent =
+          `Loading cathedral… ${pct}%`;
+      }
+    },
+    (err) => {
+      console.error('[glb] load failed', err);
+      document.querySelector('#loader div:last-child').textContent =
+        'Failed to load model';
+    }
+  );
+
+  /**
+   * Pick the cathedral's "front" face. glTF models have no canonical
+   * orientation, so we pick whichever of the 4 vertical sides has the
+   * largest projected facade area (width × height, where the width is
+   * the dimension perpendicular to the side's normal).
+   */
+  function pickFrontFace() {
+    const s = buildingSize;
+    const candidates = [
+      { dir: new THREE.Vector3( 1, 0, 0), name: '+X', w: s.z, area: s.y * s.z },
+      { dir: new THREE.Vector3(-1, 0, 0), name: '-X', w: s.z, area: s.y * s.z },
+      { dir: new THREE.Vector3( 0, 0, 1), name: '+Z', w: s.x, area: s.y * s.x },
+      { dir: new THREE.Vector3( 0, 0,-1), name: '-Z', w: s.x, area: s.y * s.x }
+    ];
+    candidates.sort((a, b) => b.area - a.area);
+    return candidates[0];
+  }
+
+  /**
+   * Position the projector camera straight in front of the largest
+   * facade, with FOV/aspect chosen so the projection plane just covers
+   * the facade rectangle.
+   */
+  function frameProjectorOntoFront() {
+    const face = pickFrontFace();
+    const h = buildingSize.y;     // facade height (always vertical)
+    const w = face.w;             // facade width  (perpendicular to normal)
+    const depthAlong = Math.abs(face.dir.x) > 0.5 ? buildingSize.x : buildingSize.z;
+    const d = Math.max(w, h) * 0.9;
+
+    // place projector in front of the chosen face
+    const pos = new THREE.Vector3()
+      .copy(face.dir).multiplyScalar(depthAlong / 2 + d)
+      .add(new THREE.Vector3(0, h / 2, 0));
+    projCamera.position.copy(pos);
+    projCamera.lookAt(0, h / 2, 0);
+
+    // fov (vertical) to JUST cover the facade height at this distance
+    const fovY = 2 * Math.atan((h / 2) / d) * 180 / Math.PI;
+    projCamera.fov = fovY * 1.04;          // 4% margin
+    projCamera.aspect = w / h;
+    projCamera.near = 0.05;
+    projCamera.far  = d + depthAlong + 50;
+    projCamera.updateProjectionMatrix();
+    projCamera.updateMatrixWorld();
+    refreshProjUniforms();
+
+    console.log(`[projector] aimed at ${face.name} face, fov=${projCamera.fov.toFixed(1)}° aspect=${projCamera.aspect.toFixed(2)}, pos=${pos.toArray().map(n=>n.toFixed(1))}`);
+
+    // Also reposition the main camera so the user sees the projection
+    // from a "corner view" — offset to the side and slightly above, so
+    // both the cathedral facade (lit up) and the projector camera
+    // (off in the distance) are visible at the same time.
+    const sideDir = new THREE.Vector3(0, 0, 1);  // step sideways
+    const sideMag = Math.max(w, h) * 0.65;
+    const upMag   = Math.max(w, h) * 0.5;
+    camera.position
+      .copy(pos)
+      .addScaledVector(face.dir, -Math.max(w, h) * 0.25)  // pull back a bit
+      .addScaledVector(sideDir,  sideMag)
+      .add(new THREE.Vector3(0, upMag, 0));
+    controls.target.set(0, h / 2, 0);
+    controls.update();
+  }
+
+  function refreshProjUniforms() {
+    projCamera.updateMatrixWorld();
+    projectorUniforms.uTextureMatrix.value
+      .copy(projCamera.projectionMatrix)
+      .multiply(projCamera.matrixWorldInverse);
+    projectorUniforms.uProjCamPos.value.copy(projCamera.position);
+  }
+
+  /**
+   * 4 theatrical ground-up spotlights, one per vertical facade.
+   * Position each spot on the ground just outside the facade, aim it
+   * at a high target point above the building's mid-section, and give
+   * it a wide cone + soft penumbra. The ground-up angle makes
+   * flying buttresses, spires and stone tracery cast long upward
+   * shadows that read as 3D form.
+   *
+   * 3 spots are warm white (incandescent stage look), the 4th (the
+   * projector-facing facade) is cooler so the video projection still
+   * reads on top.
+   */
+  function addFacadeSpots() {
+    // clear any prior spots (so auto-fit re-run doesn't pile them up)
+    for (const fs of facadeSpots) {
+      scene.remove(fs.spot);
+      scene.remove(fs.target);
+      fs.spot.dispose?.();
+    }
+    facadeSpots.length = 0;
+
+    const maxDim = Math.max(buildingSize.x, buildingSize.y, buildingSize.z);
+    // 紧贴地面 → 掠射角入射,浮雕/尖塔/飞扶壁投出长阴影
+    const groundY = 0.15;
+    // 目标从 0.98 → 0.55:打到建筑中上部(原 29.4m 几乎到顶,光锥只覆盖底部 9-23%)
+    // 改成 16.5m 中上部后,光锥在墙面上铺得更开,中下部浮雕都吃光
+    const targetY = buildingSize.y * 0.55;
+    // 60° 锥角(原 51°):覆盖更广
+    // standoff 改 per-face 计算,见 dirs.forEach 内
+    // 原来用 max 统一,导致 +Z/-Z 宽面离墙只有 0.6m,光斑半径 1.5m,几乎看不到
+
+    // (dx, dz) for each of the 4 facades. Spot sits outside the facade
+    // looking IN towards the building.
+    const dirs = [
+      { dx:  1, dz:  0, label: '+X' },
+      { dx: -1, dz:  0, label: '-X' },
+      { dx:  0, dz:  1, label: '+Z' },
+      { dx:  0, dz: -1, label: '-Z' }
+    ];
+
+    // Detect which facade the projector is aimed at — keep that one
+    // dimmer/cool so the video still pops.
+    const projFace = pickFrontFace().name;
+
+    dirs.forEach(d => {
+      // per-face standoff: 用各面自己的半宽 + 4m 离墙距离
+      // +X/-X 方向(对应 d.dx != 0)的面用 buildingSize.z 算半宽(垂直该面的方向)
+      // +Z/-Z 方向(对应 d.dz != 0)的面用 buildingSize.x 算半宽
+      // 原来用 max 统一,导致 +Z/-Z 宽面离墙只有 0.6m,光斑半径只 1.5m
+      const faceHalfWidth = (Math.abs(d.dx) > 0.5) ? buildingSize.z : buildingSize.x;
+      const standoff = faceHalfWidth / 2 + 4;
+      const isProjectorFacade = (d.label === projFace);
+      const color = isProjectorFacade ? 0xc8d8ff : 0xffb070;   // cool vs warm
+      // additive 模式下,投影面 spot 灯打出的明暗会透过视频显出来,
+      // 不再需要压暗投影面 —— 4 面同强度,光影层次才一致
+      const intensity = 60;
+      const distance = maxDim * 3.0;
+      // 60° 锥角(原 51°),覆盖更广
+      const angle = Math.PI / 3;            // ~60° cone
+      // 减小 penumbra → 阴影边缘更锐,几何细节(浮雕/雕花/尖顶)更清晰
+      const penumbra = 0.22;
+
+      const spot = new THREE.SpotLight(color, intensity, distance, angle, penumbra, 1.6);
+      spot.position.set(d.dx * standoff, groundY, d.dz * standoff);
+
+      const target = new THREE.Object3D();
+      target.position.set(0, targetY, 0);
+      scene.add(target);
+      spot.target = target;
+
+      spot.castShadow = true;
+      // 阴影贴图加大到 2048 → 复杂几何细节(尖塔/拱门)清晰可辨
+      spot.shadow.mapSize.set(2048, 2048);
+      spot.shadow.bias = -0.0006;
+      spot.shadow.camera.near = 0.5;
+      spot.shadow.camera.far = maxDim * 3;
+
+      scene.add(spot);
+      facadeSpots.push({ spot, target, dirLabel: d.label, isProjectorFacade });
+    });
+
+    console.log(`[spots] added 4 facade spots; projector facade (${projFace}) gets the cool dim one`);
+  }
+
+  /* =========================================================
+   *  dat.GUI controls
+   * ========================================================= */
+  const gui = new dat.GUI({ width: 300, name: 'Projector Controls' });
+  gui.domElement.style.opacity = '0.9';
+
+  const camFolder = gui.addFolder('Projector Camera');
+  camFolder.add(projCamera, 'fov', 10, 90, 0.5).name('FOV').onChange(() => {
+    projCamera.updateProjectionMatrix();
+  });
+  camFolder.add(projCamera, 'near', 0.01, 50, 0.05).name('near').onChange(() => {
+    projCamera.updateProjectionMatrix();
+  });
+  camFolder.add(projCamera, 'far', 10, 800, 1).name('far').onChange(() => {
+    projCamera.updateProjectionMatrix();
+  });
+  const posFolder = camFolder.addFolder('position');
+  posFolder.add(projCamera.position, 'x', -50, 50, 0.1).name('x');
+  posFolder.add(projCamera.position, 'y', 0, 60, 0.1).name('y');
+  posFolder.add(projCamera.position, 'z', 0, 120, 0.1).name('z');
+  const lookFolder = camFolder.addFolder('look at');
+  const lookProxy = { x: 0, y: buildingSize.y / 2, z: 0 };
+  lookFolder.add(lookProxy, 'x', -50, 50, 0.1).name('x');
+  lookFolder.add(lookProxy, 'y', 0, 60, 0.1).name('y');
+  lookFolder.add(lookProxy, 'z', -50, 50, 0.1).name('z');
+  function applyLook() { projCamera.lookAt(lookProxy.x, lookProxy.y, lookProxy.z); }
+  lookFolder.add({ apply: applyLook }, 'apply').name('apply lookAt');
+  camFolder.add({ refit: frameProjectorOntoFront }, 'refit').name('auto-fit front face');
+  camFolder.add({ showHelper: true }, 'showHelper').name('show frustum helper')
+    .onChange(v => projHelper.visible = v);
+  camFolder.open();
+
+  const fxFolder = gui.addFolder('Projection FX');
+  const intensityProxy = { v: 1.0 };
+  fxFolder.add(intensityProxy, 'v', 0, 1, 0.01).name('intensity')
+    .onChange(v => projectorUniforms.uIntensity.value = v);
+  fxFolder.add(projectorUniforms.uUseBackfaceCull, 'value').name('back-face cull');
+  fxFolder.open();
+
+  /* =========================================================
+   *  Resize
+   * ========================================================= */
+  function onResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+  window.addEventListener('resize', onResize);
+
+  /* =========================================================
+   *  Main loop
+   * ========================================================= */
+  const clock = new THREE.Clock();
+  const fpsEl = document.getElementById('fps');
+  const projPosEl = document.getElementById('projpos');
+  let fpsAcc = 0, fpsCount = 0, fpsTimer = 0;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.05);
+
+    tickVideo();
+    refreshProjUniforms();
+    projHelper.update();
+
+    // HUD
+    fpsAcc += dt; fpsCount++; fpsTimer += dt;
+    if (fpsTimer >= 0.5) {
+      fpsEl.textContent = (fpsCount / fpsAcc).toFixed(0) + ' fps';
+      fpsAcc = 0; fpsCount = 0; fpsTimer = 0;
+    }
+    const p = projCamera.position;
+    projPosEl.textContent =
+      `${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}  fov=${projCamera.fov.toFixed(1)}°`;
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // expose for debug
+  window.__debug = { scene, camera, projCamera, projectorUniforms, videoTex };
+  </script>
+</body>
+</html>

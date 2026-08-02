@@ -240,7 +240,9 @@ h2 {
   background: #0b0d10;
 }
 
-.project-visual img {
+.project-visual img,
+.project-visual video {
+  display: block;
   width: 100%;
   aspect-ratio: 16 / 10;
   object-fit: cover;
@@ -248,7 +250,9 @@ h2 {
 }
 
 .project-visual:hover img,
-.project-visual:focus-visible img {
+.project-visual:hover video,
+.project-visual:focus-visible img,
+.project-visual:focus-visible video {
   filter: saturate(1.04) contrast(1.02);
   transform: scale(1.008);
 }
@@ -404,7 +408,8 @@ a:focus-visible {
     border-radius: 14px;
   }
 
-  .project-visual img {
+  .project-visual img,
+  .project-visual video {
     aspect-ratio: 4 / 3;
     object-position: center;
   }
@@ -433,6 +438,7 @@ a:focus-visible {
   }
 
   .project-visual img,
+  .project-visual video,
   .visual-arrow {
     transition: none;
   }
