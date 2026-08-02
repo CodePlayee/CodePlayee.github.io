@@ -66577,18 +66577,45 @@ var MapPicker = class _MapPicker {
     if (this.modal) this.modal.style.display = "none";
   }
   // ---- data --------------------------------------------------------------
+  // Candidate URLs for the offline admin index, most reliable first.
+  //
+  // A document-relative path ('./src/...') only works when the page happens
+  // to sit one level above src/ — it breaks for deployments that ship just
+  // index.html + dist/, or for a page served from a nested/extension-less
+  // URL. Resolving against the bundle's own URL (import.meta.url, i.e.
+  // .../dist/app.bundle.js) is layout-independent: build.mjs copies the JSON
+  // next to the bundle, and ../src/ still covers a raw source checkout.
+  static _indexUrls() {
+    const urls = [];
+    try {
+      urls.push(new URL("regions-index.json", import.meta.url).href);
+      urls.push(new URL("../src/regions-index.json", import.meta.url).href);
+    } catch (_) {
+    }
+    urls.push("./src/regions-index.json");
+    return urls.filter((u, i, a) => a.indexOf(u) === i);
+  }
   async _loadIndex() {
     this._setHint("\u6B63\u5728\u52A0\u8F7D\u884C\u653F\u533A\u7D22\u5F15\u2026");
-    try {
-      const res = await fetch("./src/regions-index.json");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      this.index = await res.json();
-      this._byAdcode = new Map(this.index.map((e) => [e.adcode, e]));
-      this._fillProvinces();
-      this._setHint("");
-    } catch (e) {
-      this._setHint("\u884C\u653F\u533A\u7D22\u5F15\u52A0\u8F7D\u5931\u8D25\uFF1A" + e.message);
+    const tried = [];
+    for (const url of _MapPicker._indexUrls()) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          tried.push(`${url} \u2192 HTTP ${res.status}`);
+          continue;
+        }
+        this.index = await res.json();
+        this._byAdcode = new Map(this.index.map((e) => [e.adcode, e]));
+        this._fillProvinces();
+        this._setHint("");
+        return;
+      } catch (e) {
+        tried.push(`${url} \u2192 ${e.message}`);
+      }
     }
+    console.error("[terrain-builder] \u884C\u653F\u533A\u7D22\u5F15\u52A0\u8F7D\u5931\u8D25\uFF1A\n" + tried.join("\n"));
+    this._setHint(`\u884C\u653F\u533A\u7D22\u5F15\u52A0\u8F7D\u5931\u8D25\uFF08\u5DF2\u5C1D\u8BD5 ${tried.length} \u4E2A\u8DEF\u5F84\uFF0C\u8BE6\u89C1\u6D4F\u89C8\u5668\u63A7\u5236\u53F0\uFF09`);
   }
   _children(parentAdcode, level) {
     return this.index.filter((e) => e.parent === parentAdcode && (!level || e.level === level)).sort((a, b) => a.adcode - b.adcode);
