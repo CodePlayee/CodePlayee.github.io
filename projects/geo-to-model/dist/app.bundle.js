@@ -66811,7 +66811,7 @@ var MapPicker = class _MapPicker {
     if (syncDropdowns) this._syncDropdowns(entry);
     this._setHint(`\u6B63\u5728\u52A0\u8F7D\u300C${entry.name}\u300D\u8FB9\u754C\u2026`);
     try {
-      const res = await fetch(`${DATAV}/${adcode}.json`);
+      const res = await fetch(`${DATAV}/${adcode}.json`, { referrerPolicy: "no-referrer" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const gj = await res.json();
       const rings = this._geometryToRings(gj.features[0].geometry);
