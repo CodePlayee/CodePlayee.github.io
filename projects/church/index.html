@@ -231,8 +231,10 @@
     console.warn('[video] failed, using procedural fallback only');
     document.getElementById('vidstat').textContent = 'fallback only';
   });
-  // autoplay may already have fired 'playing' before this module ran, so the
-  // listener above would never see it; timeupdate catches that case.
+  // The element has autoplay, so 'playing' can fire before this module runs
+  // and the listener above would then never see it, leaving videoReady false
+  // and the projection stuck on the procedural fallback. timeupdate keeps
+  // firing during playback, so it catches that case.
   videoEl.addEventListener('timeupdate', function onFirstFrame() {
     if (videoEl.readyState >= videoEl.HAVE_CURRENT_DATA && videoEl.videoWidth > 0) {
       videoEl.removeEventListener('timeupdate', onFirstFrame);

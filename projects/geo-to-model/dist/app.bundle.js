@@ -67027,11 +67027,12 @@ function clipToRegion(root, ringsLngLat, proj) {
 
 // examples/terrain-builder/src/app.js
 var TOKEN_KEY = "tb.mapboxToken";
+var BUILTIN_TOKEN = "pk.eyJ1IjoiMHEyM3EiLCJhIjoiY21idXNidGJxMGRzazJsczA3azlycms0biJ9.Y04QYYbI2pOBTLwYiG09nw".trim();
 var getStoredToken = () => {
   try {
-    return (localStorage.getItem(TOKEN_KEY) || "").trim();
+    return (localStorage.getItem(TOKEN_KEY) || "").trim() || BUILTIN_TOKEN;
   } catch (_) {
-    return "";
+    return BUILTIN_TOKEN;
   }
 };
 var storeToken = (t) => {
