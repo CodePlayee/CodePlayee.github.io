@@ -17324,7 +17324,7 @@ var require_leaflet_src = __commonJS({
             map.fire("moveend");
           } else {
             this._prunePositions(+/* @__PURE__ */ new Date());
-            var direction = this._lastPos.subtract(this._positions[0]), duration = (this._lastTime - this._times[0]) / 1e3, ease = options.easeLinearity, speedVector = direction.multiplyBy(ease / duration), speed = speedVector.distanceTo([0, 0]), limitedSpeed = Math.min(options.inertiaMaxSpeed, speed), limitedSpeedVector = speedVector.multiplyBy(limitedSpeed / speed), decelerationDuration = limitedSpeed / (options.inertiaDeceleration * ease), offset = limitedSpeedVector.multiplyBy(-decelerationDuration / 2).round();
+            var direction = this._lastPos.subtract(this._positions[0]), duration = (this._lastTime - this._times[0]) / 1e3, ease2 = options.easeLinearity, speedVector = direction.multiplyBy(ease2 / duration), speed = speedVector.distanceTo([0, 0]), limitedSpeed = Math.min(options.inertiaMaxSpeed, speed), limitedSpeedVector = speedVector.multiplyBy(limitedSpeed / speed), decelerationDuration = limitedSpeed / (options.inertiaDeceleration * ease2), offset = limitedSpeedVector.multiplyBy(-decelerationDuration / 2).round();
             if (!offset.x && !offset.y) {
               map.fire("moveend");
             } else {
@@ -17332,7 +17332,7 @@ var require_leaflet_src = __commonJS({
               requestAnimFrame(function() {
                 map.panBy(offset, {
                   duration: decelerationDuration,
-                  easeLinearity: ease,
+                  easeLinearity: ease2,
                   noMoveStart: true,
                   animate: true
                 });
@@ -67052,6 +67052,174 @@ function clipToRegion(root, ringsLngLat, proj) {
   return { kept, dropped, trisBefore: Math.round(trisBefore), trisAfter: Math.round(trisAfter) };
 }
 
+// examples/terrain-builder/src/loading-grid.js
+init_build_shims();
+var SEG = 40;
+var AMP = 0.085;
+var LIVE = new Color(6211839);
+var DONE = new Color(1782598);
+var ease = (dt, k) => 1 - Math.exp(-k * dt);
+var LoadingGrid = class {
+  constructor() {
+    const n = SEG + 1;
+    const count = n * n;
+    const position = new Float32Array(count * 3);
+    const color = new Float32Array(count * 3);
+    this.rank = new Float32Array(count);
+    this.phase = new Float32Array(count);
+    this.speed = new Float32Array(count);
+    this.gain = new Float32Array(count);
+    this.life = new Float32Array(count);
+    for (let j = 0; j < n; j++) {
+      for (let i = 0; i < n; i++) {
+        const k = j * n + i;
+        position[k * 3] = i / SEG * 2 - 1;
+        position[k * 3 + 1] = j / SEG * 2 - 1;
+        position[k * 3 + 2] = 0;
+        this.rank[k] = Math.random();
+        this.phase[k] = Math.random() * Math.PI * 2;
+        this.speed[k] = 0.7 + Math.random() * 1.8;
+        this.gain[k] = 0.35 + Math.random() * 0.65;
+        this.life[k] = 1;
+      }
+    }
+    const index = [];
+    for (let j = 0; j < n; j++) {
+      for (let i = 0; i < n; i++) {
+        const k = j * n + i;
+        if (i < SEG) index.push(k, k + 1);
+        if (j < SEG) index.push(k, k + n);
+      }
+    }
+    const geometry = new BufferGeometry();
+    geometry.setAttribute("position", new BufferAttribute(position, 3));
+    geometry.setAttribute("color", new BufferAttribute(color, 3));
+    geometry.setIndex(index);
+    this.geometry = geometry;
+    this.lineMat = new LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false
+    });
+    const dots = new BufferGeometry();
+    dots.setAttribute("position", geometry.attributes.position);
+    dots.setAttribute("color", geometry.attributes.color);
+    this.dotsGeometry = dots;
+    this.pointMat = new PointsMaterial({
+      vertexColors: true,
+      size: 2.6,
+      sizeAttenuation: false,
+      transparent: true,
+      opacity: 0.95,
+      depthWrite: false
+    });
+    this.object = new Group();
+    this.object.name = "loading-grid";
+    this.object.frustumCulled = false;
+    this.object.visible = false;
+    const lines = new LineSegments(geometry, this.lineMat);
+    const points = new Points(dots, this.pointMat);
+    lines.frustumCulled = points.frustumCulled = false;
+    this.object.add(lines, points);
+    this.time = 0;
+    this.progress = 0;
+    this.target = 0;
+    this._settling = false;
+    this._fadeT = 0;
+    this._paint();
+  }
+  get active() {
+    return this.object.visible;
+  }
+  /** Show the grid centered on `center`, spanning `size` world units. */
+  start(center, size) {
+    this.object.position.copy(center);
+    this.object.scale.setScalar(size / 2);
+    const pos = this.geometry.attributes.position.array;
+    for (let k = 0; k < this.life.length; k++) {
+      pos[k * 3 + 2] = 0;
+      this.life[k] = 1;
+    }
+    this.geometry.attributes.position.needsUpdate = true;
+    this.time = 0;
+    this.progress = this.target = 0;
+    this._settling = false;
+    this._fadeT = 0;
+    this._setOpacity(1);
+    this._paint();
+    this.object.visible = true;
+  }
+  /** Report loading progress in [0,1]. */
+  setProgress(frac) {
+    if (!Number.isFinite(frac)) return;
+    this.target = Math.max(this.target, Math.min(1, Math.max(0, frac)));
+  }
+  /** Loading is over: flatten every remaining vertex, then fade out. */
+  finish() {
+    if (!this.object.visible) return;
+    this.target = 1;
+    this._settling = true;
+    this._fadeT = 0;
+  }
+  hide() {
+    this.object.visible = false;
+    this._settling = false;
+  }
+  update(dt) {
+    if (!this.object.visible || !(dt > 0)) return;
+    const t = this.time += Math.min(dt, 0.1);
+    this.progress += (this.target - this.progress) * ease(dt, 4);
+    const settle = ease(dt, 5);
+    const dim = ease(dt, 6);
+    const pos = this.geometry.attributes.position.array;
+    const col = this.geometry.attributes.color.array;
+    for (let k = 0; k < this.life.length; k++) {
+      const moving = !this._settling && this.rank[k] > this.progress;
+      let z;
+      if (moving) {
+        const s = this.speed[k], p = this.phase[k];
+        z = AMP * this.gain[k] * (Math.sin(t * s + p) * 0.75 + Math.sin(t * s * 1.7 + p * 2.3) * 0.25);
+        this.life[k] += (1 - this.life[k]) * dim;
+      } else {
+        z = pos[k * 3 + 2] * (1 - settle);
+        this.life[k] += (0 - this.life[k]) * dim;
+      }
+      pos[k * 3 + 2] = z;
+      const l = this.life[k] * (0.6 + 0.4 * Math.min(1, Math.abs(z) / AMP));
+      col[k * 3] = DONE.r + (LIVE.r - DONE.r) * l;
+      col[k * 3 + 1] = DONE.g + (LIVE.g - DONE.g) * l;
+      col[k * 3 + 2] = DONE.b + (LIVE.b - DONE.b) * l;
+    }
+    this.geometry.attributes.position.needsUpdate = true;
+    this.geometry.attributes.color.needsUpdate = true;
+    if (this._settling) {
+      this._fadeT += dt;
+      const o = 1 - Math.max(0, (this._fadeT - 0.25) / 0.6);
+      if (o <= 0) {
+        this.hide();
+        return;
+      }
+      this._setOpacity(o);
+    }
+  }
+  _setOpacity(o) {
+    this.lineMat.opacity = 0.85 * o;
+    this.pointMat.opacity = 0.95 * o;
+  }
+  // Paint the initial (all-live) colors so the first frame isn't black.
+  _paint() {
+    const col = this.geometry.attributes.color.array;
+    for (let k = 0; k < this.life.length; k++) {
+      const l = this.life[k] * 0.6;
+      col[k * 3] = DONE.r + (LIVE.r - DONE.r) * l;
+      col[k * 3 + 1] = DONE.g + (LIVE.g - DONE.g) * l;
+      col[k * 3 + 2] = DONE.b + (LIVE.b - DONE.b) * l;
+    }
+    this.geometry.attributes.color.needsUpdate = true;
+  }
+};
+
 // examples/terrain-builder/src/app.js
 var TOKEN_KEY = "tb.mapboxToken";
 var BUILTIN_TOKEN = "pk.eyJ1IjoiMHEyM3EiLCJhIjoiY21idXNidGJxMGRzazJsczA3azlycms0biJ9.Y04QYYbI2pOBTLwYiG09nw".trim();
@@ -67089,6 +67257,7 @@ var App = class {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
+    this.controls.autoRotateSpeed = 1.2;
     this._initLights();
     this._initHelpers();
     this.token = getStoredToken();
@@ -67115,6 +67284,9 @@ var App = class {
     this.scene.add(this.grid);
     this.axes = new AxesHelper(0.6);
     this.scene.add(this.axes);
+    this.loadingGrid = new LoadingGrid();
+    this.scene.add(this.loadingGrid.object);
+    this.clock = new Clock();
   }
   _bindUI() {
     $("#btn-token-save").addEventListener("click", () => this._saveToken());
@@ -67125,6 +67297,7 @@ var App = class {
     this._refreshTokenUI();
     $("#btn-build").addEventListener("click", () => this.build());
     $("#btn-export").addEventListener("click", () => this.doExport());
+    $("#btn-autorotate").addEventListener("click", () => this.setAutoRotate());
     $("#coords").addEventListener("keydown", (e) => {
       if (e.key === "Enter") this.build();
     });
@@ -67314,6 +67487,23 @@ var App = class {
     const pct = Math.max(0, Math.min(1, frac)) * 100;
     $("#progress-bar").style.width = pct.toFixed(1) + "%";
     $("#progress-label").textContent = label || `${pct.toFixed(0)}%`;
+    this.loadingGrid.setProgress(frac);
+  }
+  // Show the loading grid filling the current view: centered on the orbit
+  // target and sized from the camera distance, so it is visible whatever
+  // scale the previous model left the camera at. The static helpers are
+  // hidden meanwhile to keep the animation legible.
+  _startLoadingGrid() {
+    const dist = this.camera.position.distanceTo(this.controls.target);
+    const visibleH = 2 * dist * Math.tan(MathUtils.degToRad(this.camera.fov / 2));
+    this.loadingGrid.start(this.controls.target, visibleH * 0.6);
+    this.grid.visible = false;
+    this.axes.visible = false;
+  }
+  _stopLoadingGrid() {
+    this.loadingGrid.finish();
+    this.grid.visible = true;
+    this.axes.visible = true;
   }
   // Render a list of data-availability warnings (empty list clears the panel).
   setWarnings(list) {
@@ -67368,6 +67558,7 @@ var App = class {
     }
     this.setStatus("\u6B63\u5728\u751F\u6210\u5730\u5F62\u2026", true);
     this._clearModel();
+    this._startLoadingGrid();
     this.setWarnings([]);
     const warnings = [];
     const est = estimate(origin, radius2, zoom, sel);
@@ -67454,6 +67645,7 @@ var App = class {
     } finally {
       fetch_default.onTileDone = null;
       this.setProgress(null);
+      this._stopLoadingGrid();
     }
   }
   _summary(root) {
@@ -67502,6 +67694,10 @@ var App = class {
     this.controls.update();
     this.grid.scale.setScalar(maxDim * 1.5);
     this.grid.position.set(center.x, center.y, box.min.z);
+    if (this.loadingGrid.active) {
+      this.loadingGrid.object.position.set(center.x, center.y, box.min.z);
+      this.loadingGrid.object.scale.setScalar(maxDim * 0.75);
+    }
   }
   // Measure the actual byte size of the currently selected export format by
   // building (and caching) its payload. Shown next to the format selector.
@@ -67549,6 +67745,15 @@ var App = class {
       btn.disabled = false;
     }
   }
+  // Toggle (or force, with an explicit argument) camera auto-rotation around
+  // the current orbit target. OrbitControls does the work in `update()`,
+  // which the render loop already calls every frame.
+  setAutoRotate(on = !this.controls.autoRotate) {
+    this.controls.autoRotate = on;
+    const btn = $("#btn-autorotate");
+    btn.classList.toggle("on", on);
+    btn.setAttribute("aria-pressed", String(on));
+  }
   _resize() {
     const wrap = this.canvas.parentElement;
     const w = wrap.clientWidth, h = wrap.clientHeight;
@@ -67558,6 +67763,7 @@ var App = class {
   }
   _animate() {
     requestAnimationFrame(() => this._animate());
+    this.loadingGrid.update(this.clock.getDelta());
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
   }

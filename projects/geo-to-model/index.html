@@ -92,6 +92,20 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         #stage { flex: 1; position: relative; height: 100vh; }
         #viewer { width: 100%; height: 100%; display: block; }
+        .viewer-tools {
+            position: absolute; top: 12px; right: 12px; z-index: 5;
+            display: flex; gap: 8px;
+        }
+        .tool-btn {
+            width: auto; padding: 7px 12px; font-size: 12px;
+            background: rgba(19, 26, 34, .82); color: var(--muted);
+            border: 1px solid var(--line); border-radius: 8px;
+            backdrop-filter: blur(3px);
+        }
+        .tool-btn:hover { color: var(--text); border-color: var(--accent); }
+        .tool-btn.on { background: var(--accent); color: #04101d; border-color: var(--accent); }
+        .tool-ico { display: inline-block; margin-right: 5px; }
+        .tool-btn.on .tool-ico { animation: spin 2.4s linear infinite; }
         .examples { font-size: 11px; color: var(--muted); }
         .examples a { color: var(--accent); cursor: pointer; text-decoration: none; margin-right: 8px; }
         .footer { margin-top: auto; font-size: 11px; color: var(--muted); }
@@ -276,6 +290,12 @@
 
     <main id="stage">
         <canvas id="viewer"></canvas>
+        <div class="viewer-tools">
+            <button id="btn-autorotate" class="tool-btn" type="button" aria-pressed="false"
+                    title="开关相机自动旋转">
+                <span class="tool-ico">⟳</span>自动旋转
+            </button>
+        </div>
     </main>
 
     <!-- Region picker modal (China). Populated/controlled by src/map.js. -->
