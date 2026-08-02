@@ -1,5 +1,7 @@
 name: Sync projects
 
+run-name: Sync ${{ github.event.client_payload.project || inputs.project || 'all' }}
+
 # Each demo under projects/ is a build of its own repository, vendored here so
 # GitHub Pages can serve it. This rebuilds them from source and commits the
 # result when it changed.
@@ -11,6 +13,10 @@ on:
         type: choice
         default: all
         options: [all, fly-sim, geo-to-model, train-travel, dog-fight, church]
+  # Each source repo pings this on push (see its notify-site.yml) so a demo
+  # goes live right after it changes instead of waiting for the nightly run.
+  repository_dispatch:
+    types: [sync-project]
   schedule:
     - cron: '17 3 * * *'
 
@@ -33,7 +39,7 @@ jobs:
 
       - name: Check out sources
         env:
-          WANTED: ${{ inputs.project || 'all' }}
+          WANTED: ${{ github.event.client_payload.project || inputs.project || 'all' }}
         run: |
           set -euo pipefail
           clone() {
