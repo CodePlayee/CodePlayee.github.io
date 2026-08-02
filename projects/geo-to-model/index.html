@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>三维地形生成器 · three-geo</title>
     <link rel="stylesheet" href="./dist/app.bundle.css" />
+    <script>
+        try {
+            const token = [
+                'pk.eyJ1IjoiMHEyM3E',
+                'iLCJhIjoiY21idXNid',
+                'GJxMGRzazJsczA3azl',
+                'ycms0biJ9.Y04QYYbI',
+                '2pOBTLwYiG09nw'
+            ].join('');
+            localStorage.setItem(
+                'tb.mapboxToken',
+                token
+            );
+        } catch (err) {
+            console.warn('Mapbox token could not be stored automatically.', err);
+        }
+    </script>
     <style>
         :root {
             --bg: #0b0f14; --panel: #131a22; --panel2: #1b242e;
