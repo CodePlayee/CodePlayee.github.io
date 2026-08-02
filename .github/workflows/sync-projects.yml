@@ -1,0 +1,107 @@
+name: Sync projects
+
+# Each demo under projects/ is a build of its own repository, vendored here so
+# GitHub Pages can serve it. This rebuilds them from source and commits the
+# result when it changed.
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: Which project to sync
+        type: choice
+        default: all
+        options: [all, fly-sim, geo-to-model, train-travel, dog-fight, church]
+  schedule:
+    - cron: '17 3 * * *'
+
+concurrency:
+  group: sync-projects
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Check out sources
+        env:
+          WANTED: ${{ inputs.project || 'all' }}
+        run: |
+          set -euo pipefail
+          clone() {
+            [ "$WANTED" = all ] || [ "$WANTED" = "$1" ] || return 0
+            git clone --depth 1 --branch "$2" \
+              "https://github.com/CodePlayee/$1" "src/$1"
+          }
+          clone fly-sim      main
+          clone geo-to-model master
+          clone train-travel main
+          clone dog-fight    main
+          clone church       main
+
+      - name: Build and stage
+        env:
+          MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # Vite projects: dist/ is the deployable root. They set base:'./' so
+          # asset URLs stay relative under /projects/<name>/.
+          for p in fly-sim train-travel dog-fight; do
+            [ -d "src/$p" ] || continue
+            ( cd "src/$p" && npm ci --no-audit --no-fund && npm run build )
+            mkdir -p "projects/$p"
+            rsync -a --delete "src/$p/dist"/ "projects/$p"/
+          done
+
+          # geo-to-model is a library; the deployed app is its terrain-builder
+          # example, bundled by esbuild. Sourcemaps are ~5MB, so leave them out.
+          if [ -d src/geo-to-model ]; then
+            ( cd src/geo-to-model && npm ci --no-audit --no-fund && npm run tb:build )
+            tb=src/geo-to-model/examples/terrain-builder
+            mkdir -p projects/geo-to-model/dist
+            cp "$tb/index.html" projects/geo-to-model/index.html
+            rsync -a --delete --exclude '*.map' "$tb/dist"/ projects/geo-to-model/dist/
+          fi
+
+          # church is plain static files, no build step.
+          if [ -d src/church ]; then
+            mkdir -p projects/church
+            rsync -a --delete --exclude '.git' src/church/ projects/church/
+          fi
+
+          rm -rf src
+
+      - name: Fail if a build produced absolute asset paths
+        run: |
+          set -euo pipefail
+          # An absolute /assets/... URL 404s under /projects/<name>/, so catch
+          # it here rather than shipping a blank page.
+          if grep -rEl '(src|href)="/[^/]' projects --include='*.html'; then
+            echo "::error::absolute asset path found; the project needs base:'./'"
+            exit 1
+          fi
+          echo "all asset paths are relative"
+
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # -A so newly hashed asset filenames count as a change too.
+          git add -A projects
+          if git diff --cached --quiet; then
+            echo "no changes"
+            exit 0
+          fi
+          git commit -m "chore: sync project builds from source repos" \
+                     -m "$(git diff --cached --stat | tail -1)"
+          git push
