@@ -1,0 +1,27 @@
+name: Notify site
+
+# The portfolio site (CodePlayee/CodePlayee.github.io) vendors a build of this
+# repo under projects/church/. A push here can't trigger a workflow over
+# there on its own, so ping it explicitly and let it rebuild just this project.
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    # Forks (and this repo before the secret is added) simply skip it.
+    if: ${{ github.repository_owner == 'CodePlayee' }}
+    steps:
+      - name: Ask the site to resync this project
+        env:
+          GH_TOKEN: ${{ secrets.SITE_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::warning::SITE_SYNC_TOKEN is not set; skipping site sync"
+            exit 0
+          fi
+          echo '{"event_type":"sync-project","client_payload":{"project":"church"}}' \
+            | gh api repos/CodePlayee/CodePlayee.github.io/dispatches --input -
+          echo "requested a rebuild of projects/church"
