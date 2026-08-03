@@ -46,13 +46,12 @@
           </div>
           <a class="project-visual" href="./projects/fly-sim/" aria-label="打开 flySim 动态演示">
             <video
-              src="./assets/video/fly-sim.mp4"
+              data-src="./assets/video/fly-sim.mp4"
               poster="./assets/screens/fly-sim.jpg"
-              autoplay
               muted
               loop
               playsinline
-              preload="metadata"
+              preload="none"
               aria-label="客机在夜色中飞越城市灯网的循环画面"
             ></video>
             <span class="visual-arrow" aria-hidden="true">&#8599;</span>
@@ -72,13 +71,12 @@
           </div>
           <a class="project-visual" href="./projects/geo-to-model/" aria-label="打开 geo-to-model 动态演示">
             <video
-              src="./assets/video/geo-to-model.mp4"
+              data-src="./assets/video/geo-to-model.mp4"
               poster="./assets/screens/geo-to-model.jpg"
-              autoplay
               muted
               loop
               playsinline
-              preload="metadata"
+              preload="none"
               aria-label="三维地形生成器从顶点格网加载出真实地形的循环画面"
             ></video>
             <span class="visual-arrow" aria-hidden="true">&#8599;</span>
@@ -97,7 +95,12 @@
             </div>
           </div>
           <a class="project-visual" href="./projects/train-travel/" aria-label="打开 train-travel 动态演示">
-            <img src="./assets/screens/train-travel.png" alt="train-travel 程序化铁路与山地场景" />
+            <img
+              src="./assets/screens/train-travel.png"
+              alt="train-travel 程序化铁路与山地场景"
+              loading="lazy"
+              decoding="async"
+            />
             <span class="visual-arrow" aria-hidden="true">&#8599;</span>
           </a>
         </section>
@@ -115,13 +118,12 @@
           </div>
           <a class="project-visual" href="./projects/dog-fight/" aria-label="打开 Crimson Dawn 动态演示">
             <video
-              src="./assets/video/dog-fight.mp4"
+              data-src="./assets/video/dog-fight.mp4"
               poster="./assets/screens/dog-fight.jpg"
-              autoplay
               muted
               loop
               playsinline
-              preload="metadata"
+              preload="none"
               aria-label="战机在云海上空翻转拉出尾迹的三秒循环画面"
             ></video>
             <span class="visual-arrow" aria-hidden="true">&#8599;</span>
@@ -141,13 +143,12 @@
           </div>
           <a class="project-visual" href="./projects/church/" aria-label="打开 Video Projection Mapping 动态演示">
             <video
-              src="./assets/video/church.mp4"
+              data-src="./assets/video/church.mp4"
               poster="./assets/screens/church.jpg"
-              autoplay
               muted
               loop
               playsinline
-              preload="metadata"
+              preload="none"
               aria-label="投影影像映射在哥特式教堂立面上的三秒循环画面"
             ></video>
             <span class="visual-arrow" aria-hidden="true">&#8599;</span>
@@ -160,5 +161,41 @@
       <span>CodePlayee</span>
       <span>Five worlds. Built for the web.</span>
     </footer>
+
+    <script>
+      (function () {
+        var videos = document.querySelectorAll(".project-visual video[data-src]");
+        if (!videos.length || !("IntersectionObserver" in window)) return;
+
+        var connection = navigator.connection || {};
+        var thrifty =
+          connection.saveData === true ||
+          /^(slow-2g|2g)$/.test(connection.effectiveType || "") ||
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (thrifty) return;
+
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              var video = entry.target;
+              if (!entry.isIntersecting) {
+                if (!video.paused) video.pause();
+                return;
+              }
+              if (!video.getAttribute("src")) {
+                video.setAttribute("src", video.dataset.src);
+              }
+              var played = video.play();
+              if (played) played.catch(function () {});
+            });
+          },
+          { rootMargin: "300px 0px", threshold: 0.2 }
+        );
+
+        videos.forEach(function (video) {
+          observer.observe(video);
+        });
+      })();
+    </script>
   </body>
 </html>

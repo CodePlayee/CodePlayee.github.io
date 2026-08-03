@@ -136,8 +136,7 @@ h1 {
   gap: 14px;
 }
 
-.filled-link,
-.outline-link {
+.filled-link {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -145,28 +144,15 @@ h1 {
   border: 1px solid var(--blue-hover);
   border-radius: 24px;
   padding: 0 21px;
-  font-size: 16px;
-  line-height: 1;
-}
-
-.filled-link {
   color: #ffffff;
   background: var(--blue-hover);
+  font-size: 16px;
+  line-height: 1;
 }
 
 .filled-link:hover,
 .filled-link:focus-visible {
   background: var(--blue);
-}
-
-.outline-link {
-  color: var(--blue);
-}
-
-.outline-link:hover,
-.outline-link:focus-visible {
-  color: #ffffff;
-  background: var(--blue-hover);
 }
 
 .works {
@@ -298,16 +284,6 @@ h2 {
   font-weight: 650;
 }
 
-.site-footer a {
-  justify-self: end;
-  color: #424245;
-}
-
-.site-footer a:hover,
-.site-footer a:focus-visible {
-  text-decoration: underline;
-}
-
 a:focus-visible {
   outline: 2px solid #0071e3;
   outline-offset: 3px;
@@ -374,8 +350,7 @@ a:focus-visible {
     line-height: 1.35;
   }
 
-  .filled-link,
-  .outline-link {
+  .filled-link {
     min-height: 40px;
     padding: 0 17px;
     font-size: 14px;
@@ -425,10 +400,6 @@ a:focus-visible {
     grid-template-columns: 1fr;
     gap: 8px;
     padding-bottom: 30px;
-  }
-
-  .site-footer a {
-    justify-self: start;
   }
 }
 
