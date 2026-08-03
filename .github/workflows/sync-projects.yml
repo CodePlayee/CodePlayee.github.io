@@ -12,7 +12,7 @@ on:
         description: Which project to sync
         type: choice
         default: all
-        options: [all, fly-sim, geo-to-model, train-travel, dog-fight, church]
+        options: [all, fly-sim, geo-to-model, tank-world, train-travel, dog-fight, church]
   # Each source repo pings this on push (see its notify-site.yml) so a demo
   # goes live right after it changes instead of waiting for the nightly run.
   repository_dispatch:
@@ -49,6 +49,7 @@ jobs:
           }
           clone fly-sim      main
           clone geo-to-model master
+          clone tank-world   main
           clone train-travel main
           clone dog-fight    main
           clone church       main
@@ -76,6 +77,16 @@ jobs:
             mkdir -p projects/geo-to-model/dist
             cp "$tb/index.html" projects/geo-to-model/index.html
             rsync -a --delete --exclude '*.map' "$tb/dist"/ projects/geo-to-model/dist/
+          fi
+
+          # tank-world keeps the runnable game in effects/iron-front, so the
+          # lockfile, the build and dist/ all live one level down. Its
+          # sourcemaps are ~6MB, so leave them out.
+          if [ -d src/tank-world ]; then
+            game=src/tank-world/effects/iron-front
+            ( cd "$game" && npm ci --no-audit --no-fund && npm run build )
+            mkdir -p projects/tank-world
+            rsync -a --delete --exclude '*.map' "$game/dist"/ projects/tank-world/
           fi
 
           # church is plain static files, no build step.
