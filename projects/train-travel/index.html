@@ -4,14 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Train Travel</title>
-  <script type="module" crossorigin src="./assets/index-UGWu10E2.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DJt6G4Dv.css">
+  <script type="module" crossorigin src="./assets/index-DcjpaZV2.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-jXS2TeIn.css">
 </head>
 <body>
   <div id="loading">Loading...</div>
   <div id="hud">
     <div class="speed" id="speedDisplay">0 km/h</div>
     <div id="timeDisplay"></div>
+    <div id="cameraDisplay">Chase</div>
     <div class="controls">W/S or &uarr;/&darr;: Speed &nbsp; C: Camera &nbsp; Mouse: Look &nbsp; H: Horn &nbsp; M: Mute &nbsp; G: debug wireframe</div>
   </div>
   <div id="debugPanel">
@@ -41,6 +42,20 @@
     <input type="range" id="headlightPenumbra" min="0" max="1" step="0.01" value="0.35">
     <div class="row"><label for="headlightDistance">Distance (m)</label><span id="headlightDistanceLabel">150</span></div>
     <input type="range" id="headlightDistance" min="20" max="500" step="5" value="150">
+    <div class="section">Camera</div>
+    <div class="row presets cameraModes">
+      <button data-camera="0">Chase</button>
+      <button data-camera="1">Side</button>
+      <button data-camera="2">Cab</button>
+      <button data-camera="3">Overhead</button>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="overheadAssist" checked> Overhead while terrain streams</label>
+    </div>
+    <div class="row"><label>Streaming / assist</label><span id="streamingLabel">0 / 0.00</span></div>
+    <div class="section">Night</div>
+    <div class="row"><label for="nightAmbient">Ambient</label><span id="nightAmbientLabel">0.77</span></div>
+    <input type="range" id="nightAmbient" min="0" max="1.5" step="0.01" value="0.77">
   </div>
 </body>
 </html>
